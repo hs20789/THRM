@@ -828,6 +828,7 @@ export default function ControlPanel({ config, onConfigChange, isConnected, fanD
       { value: 'zh-CN', label: t('common.languages.zh-CN') },
       { value: 'en-US', label: t('common.languages.en-US') },
       { value: 'ja-JP', label: t('common.languages.ja-JP') },
+      { value: 'ko-KR', label: t('common.languages.ko-KR') },
     ]),
     [locale, t],
   );

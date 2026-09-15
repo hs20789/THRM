@@ -5,9 +5,10 @@ import i18n, { type Resource } from "i18next";
 import { I18nextProvider, initReactI18next } from "react-i18next";
 import enUS from "../locales/en-US/translation.json";
 import jaJP from "../locales/ja-JP/translation.json";
+import koKR from "../locales/ko-KR/translation.json";
 import zhCN from "../locales/zh-CN/translation.json";
 
-export const SUPPORTED_LOCALES = ["zh-CN", "en-US", "ja-JP"] as const;
+export const SUPPORTED_LOCALES = ["zh-CN", "en-US", "ja-JP", "ko-KR"] as const;
 export type AppLocale = (typeof SUPPORTED_LOCALES)[number];
 
 const DEFAULT_LOCALE: AppLocale = "zh-CN";
@@ -17,6 +18,7 @@ const resources: Resource = {
   "zh-CN": { translation: zhCN },
   "en-US": { translation: enUS },
   "ja-JP": { translation: jaJP },
+  "ko-KR": { translation: koKR },
 };
 
 function normalizeLocale(value?: string | null): AppLocale {
@@ -37,6 +39,9 @@ function normalizeLocale(value?: string | null): AppLocale {
   }
   if (lowered.startsWith("en")) {
     return "en-US";
+  }
+  if (lowered === "ko" || lowered.startsWith("ko-")) {
+    return "ko-KR";
   }
 
   return DEFAULT_LOCALE;
