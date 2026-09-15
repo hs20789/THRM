@@ -1,10 +1,10 @@
 {
   "connectionRecovery": {
     "title": "연결 안내",
-    "temperatureTitle": "온도 모니터링을 확인해 주세요",
+    "temperatureTitle": "온도 모니터링을 확인하세요",
     "steps": {
       "connection": "장치의 전원이 켜져 있는지 확인하세요. BS1은 THRM이 자동으로 연결하며, BS2/BS3 모델은 먼저 시스템 설정에서 Bluetooth로 연결해야 합니다.",
-      "release": "센서나 장치 연결을 사용 중일 수 있는 다른 하드웨어 도구를 종료하세요.",
+      "release": "센서나 장치 연결을 사용 중일 수 있는 다른 하드웨어 모니터링 프로그램을 종료하세요.",
       "diagnostics": "다시 시도해도 실패하면 진단 패키지를 내보내 문제 보고에 첨부하세요."
     },
     "actions": {
@@ -279,7 +279,7 @@
   },
   "aboutPanel": {
     "title": "{{name}} 정보",
-    "description": "{{name}}은 FlyDigi 노트북 가압식 쿨러를 위한 서드파티 드라이버 및 제어 도구입니다.",
+    "description": "{{name}}은 FlyDigi 노트북 쿨러를 위한 서드파티 드라이버 및 제어 도구입니다.",
     "images": {
       "wordmarkAlt": "{{name}} 워드마크",
       "avatarAlt": "Tianli 아바타",
