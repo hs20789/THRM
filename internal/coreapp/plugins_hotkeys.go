@@ -288,45 +288,51 @@ func (a *CoreApp) applyHotkeyBindings(cfg types.AppConfig) {
 
 func (a *CoreApp) handleHotkeyAction(action hotkeysvc.Action, shortcut string) {
 	a.safeGo("handleHotkeyAction", func() {
-		var message string
+		var result hotkeyResult
 		success := true
 
 		switch action {
 		case hotkeysvc.ActionToggleManualGear:
-			msg, err := a.toggleManualGearByHotkey()
+			res, err := a.toggleManualGearByHotkey()
 			if err != nil {
 				success = false
-				message = err.Error()
+				result = hotkeyResult{Text: err.Error()}
 			} else {
-				message = msg
+				result = res
 			}
 		case hotkeysvc.ActionToggleAutoMode:
-			msg, err := a.toggleAutoControlByHotkey()
+			res, err := a.toggleAutoControlByHotkey()
 			if err != nil {
 				success = false
-				message = err.Error()
+				result = hotkeyResult{Text: err.Error()}
 			} else {
-				message = msg
+				result = res
 			}
 		case hotkeysvc.ActionToggleCurveProfile:
-			msg, err := a.toggleCurveProfileByHotkey()
+			res, err := a.toggleCurveProfileByHotkey()
 			if err != nil {
 				success = false
-				message = err.Error()
+				result = hotkeyResult{Text: err.Error()}
 			} else {
-				message = msg
+				result = res
 			}
 		default:
 			success = false
-			message = "未知快捷键动作"
+			result = hotkeyResult{Text: "未知快捷键动作"}
 		}
 
+		message := result.Text
+
 		if a.ipcServer != nil {
+			// messageKey/messageParams 是新增字段，message 保持原样：旧版前端与系统通知
+			// 继续用中文原文，认识 messageKey 的前端才走 i18n 分支。
 			a.ipcServer.BroadcastEvent(ipc.EventHotkeyTriggered, map[string]any{
-				"action":   string(action),
-				"shortcut": shortcut,
-				"success":  success,
-				"message":  message,
+				"action":        string(action),
+				"shortcut":      shortcut,
+				"success":       success,
+				"message":       message,
+				"messageKey":    result.Key,
+				"messageParams": result.Params,
 			})
 		}
 
@@ -340,45 +346,68 @@ func (a *CoreApp) handleHotkeyAction(action hotkeysvc.Action, shortcut string) {
 	})
 }
 
-func (a *CoreApp) toggleCurveProfileByHotkey() (string, error) {
-	profile, err := a.CycleFanCurveProfile()
-	if err != nil {
-		return "", err
-	}
-	return fmt.Sprintf("温控曲线已切换: %s", profile.Name), nil
+// hotkeyResult 是一次快捷键动作的结果。Key/Params 给前端做 i18n（核心服务不知道 GUI
+// 当前语言），Text 是等价的中文原文，留给系统通知和不认识 messageKey 的旧版前端。
+//
+// Params 里的挡位/档级放的是 GearCommands 的原始键（"静音"、"中"），不是本地化文案：
+// 那是设备协议值，前端拿到后用 getManualGearLabel/getManualLevelLabel 翻译再插值。
+type hotkeyResult struct {
+	Key    string
+	Params map[string]any
+	Text   string
 }
 
-func (a *CoreApp) toggleAutoControlByHotkey() (string, error) {
+func (a *CoreApp) toggleCurveProfileByHotkey() (hotkeyResult, error) {
+	profile, err := a.CycleFanCurveProfile()
+	if err != nil {
+		return hotkeyResult{}, err
+	}
+	return hotkeyResult{
+		Key:    types.HotkeyKeyCurveSwitched,
+		Params: map[string]any{"profile": profile.Name},
+		Text:   fmt.Sprintf("温控曲线已切换: %s", profile.Name),
+	}, nil
+}
+
+func (a *CoreApp) toggleAutoControlByHotkey() (hotkeyResult, error) {
 	cfg := a.configManager.Get()
 	target := !cfg.AutoControl
 	if err := a.SetAutoControl(target); err != nil {
-		return "", err
+		return hotkeyResult{}, err
 	}
 	if target {
-		return "智能变频已开启", nil
+		return hotkeyResult{Key: types.HotkeyKeySmartControlOn, Text: "智能变频已开启"}, nil
 	}
-	return "智能变频已关闭", nil
+	return hotkeyResult{Key: types.HotkeyKeySmartControlOff, Text: "智能变频已关闭"}, nil
 }
 
-func (a *CoreApp) toggleManualGearByHotkey() (string, error) {
+func (a *CoreApp) toggleManualGearByHotkey() (hotkeyResult, error) {
 	cfg := a.configManager.Get()
 
 	if cfg.AutoControl {
 		if err := a.SetAutoControl(false); err != nil {
-			return "", fmt.Errorf("切换到手动模式失败: %w", err)
+			return hotkeyResult{}, fmt.Errorf("切换到手动模式失败: %w", err)
 		}
 	}
 
 	nextGear, nextLevel := a.getNextManualGearWithMemory(cfg.ManualGear, cfg.ManualLevel)
 	if ok := a.SetManualGear(nextGear, nextLevel); !ok {
-		return "", fmt.Errorf("应用手动挡位失败")
+		return hotkeyResult{}, fmt.Errorf("应用手动挡位失败")
 	}
 
 	rpm := cfg.ResolveGearRPM(nextGear, nextLevel)
 	if rpm > 0 {
-		return fmt.Sprintf("手动挡位: %s %s (%d RPM)", nextGear, nextLevel, rpm), nil
+		return hotkeyResult{
+			Key:    types.HotkeyKeyManualGearWithRPM,
+			Params: map[string]any{"gear": nextGear, "level": nextLevel, "rpm": rpm},
+			Text:   fmt.Sprintf("手动挡位: %s %s (%d RPM)", nextGear, nextLevel, rpm),
+		}, nil
 	}
-	return fmt.Sprintf("手动挡位: %s %s", nextGear, nextLevel), nil
+	return hotkeyResult{
+		Key:    types.HotkeyKeyManualGear,
+		Params: map[string]any{"gear": nextGear, "level": nextLevel},
+		Text:   fmt.Sprintf("手动挡位: %s %s", nextGear, nextLevel),
+	}, nil
 }
 
 func (a *CoreApp) getNextManualGearWithMemory(currentGear, currentLevel string) (string, string) {

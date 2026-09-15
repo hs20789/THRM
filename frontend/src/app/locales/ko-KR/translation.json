@@ -107,7 +107,12 @@
     },
     "hotkey": {
       "successTitle": "기능 설정을 변경했습니다",
-      "failureTitle": "작업에 실패했습니다"
+      "failureTitle": "작업에 실패했습니다",
+      "curveSwitched": "팬 커브를 전환했습니다: {{profile}}",
+      "smartControlOn": "스마트 제어를 켰습니다",
+      "smartControlOff": "스마트 제어를 껐습니다",
+      "manualGear": "수동 속도 단계: {{gear}} {{level}}",
+      "manualGearWithRpm": "수동 속도 단계: {{gear}} {{level}} ({{rpm}} RPM)"
     },
     "legionFnQ": {
       "modeChangedTitle": "Legion 성능 모드가 변경되었습니다",
@@ -1002,11 +1007,19 @@
       "pawnTitle": "PawnIO 드라이버",
       "pawnDescription": "온도 측정값이 이상한가요? PawnIO 드라이버를 다시 설치해 보세요.",
       "reinstall": "PawnIO 다시 설치",
+      "command": {
+        "placeholder": "27 또는 5A A5 27 02 29",
+        "send": "전송",
+        "warnMaintenance": "펌웨어 유지보수 명령 0x{{hex}}은(는) 장치 작동 상태를 변경합니다. 0x03은 고정 단계로 전환될 수 있고, 0x05는 초기화 래치만 해제하며, 0x06은 4단계 속도와 시작 설정, 조명 상태를 초기화합니다. 전송해도 앱 설정이 자동으로 복원되지 않습니다.",
+        "warnDangerous": "고위험 명령 0x{{hex}}: 펌웨어 하위 계층과 디버그 레지스터를 직접 조작합니다. 잘못 사용하면 장치가 오작동하거나 복구 불가능해질 수 있으니 확인 후 전송하세요.",
+        "warnDefault": "원시 명령은 장치 펌웨어로 직접 전달됩니다. 잘못된 명령은 장치 오작동을 일으킬 수 있으니 주의해서 사용하세요."
+      },
       "toasts": {
         "reinstallExecuted": "PawnIO 설치 프로그램을 실행했습니다",
         "uninstallWarning": "PawnIO 제거 단계에서 알림이 반환되었습니다: {{warning}}",
         "bridgeWarning": "온도 모니터링을 다시 초기화하지 못했습니다: {{warning}}",
-        "reinstallFailed": "PawnIO를 다시 설치하지 못했습니다: {{error}}"
+        "reinstallFailed": "PawnIO를 다시 설치하지 못했습니다: {{error}}",
+        "sent": "{{frame}}을(를) 전송했습니다"
       }
     },
     "diagnostics": {

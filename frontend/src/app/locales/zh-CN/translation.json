@@ -107,7 +107,12 @@
     },
     "hotkey": {
       "successTitle": "功能变动",
-      "failureTitle": "操作失败"
+      "failureTitle": "操作失败",
+      "curveSwitched": "温控曲线已切换: {{profile}}",
+      "smartControlOn": "智能变频已开启",
+      "smartControlOff": "智能变频已关闭",
+      "manualGear": "手动挡位: {{gear}} {{level}}",
+      "manualGearWithRpm": "手动挡位: {{gear}} {{level}} ({{rpm}} RPM)"
     },
     "legionFnQ": {
       "modeChangedTitle": "拯救者性能模式变化",
@@ -1002,11 +1007,19 @@
       "pawnTitle": "PawnIO 驱动",
       "pawnDescription": "温度读取异常？尝试重新安装 PawnIO 驱动。",
       "reinstall": "重新安装 PawnIO",
+      "command": {
+        "placeholder": "27 或 5A A5 27 02 29",
+        "send": "发送",
+        "warnMaintenance": "固件维护命令 0x{{hex}} 会改变设备运行状态；0x03 可能切到固定一挡，0x05 只清除初始化锁存，0x06 会重置四挡转速、启动设置和灯光状态。直接发送不会自动恢复 APP 配置。",
+        "warnDangerous": "高危命令 0x{{hex}}：直接操作固件底层/调试寄存器，误用可能导致设备异常甚至变砖，请确认后再发送。",
+        "warnDefault": "原始命令会直接下发到设备固件，错误命令可能导致设备异常，请谨慎操作。"
+      },
       "toasts": {
         "reinstallExecuted": "PawnIO 安装程序已执行",
         "uninstallWarning": "PawnIO 卸载步骤返回提示：{{warning}}",
         "bridgeWarning": "温度监控重新初始化失败：{{warning}}",
-        "reinstallFailed": "重新安装 PawnIO 失败：{{error}}"
+        "reinstallFailed": "重新安装 PawnIO 失败：{{error}}",
+        "sent": "已发送 {{frame}}"
       }
     },
     "diagnostics": {

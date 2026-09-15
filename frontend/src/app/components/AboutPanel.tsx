@@ -31,6 +31,7 @@ import {
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { BRAND } from '../lib/brand';
+import { SUPPORTED_LOCALES } from '../lib/i18n';
 import { OPEN_SOURCE_GROUPS, OPEN_SOURCE_TOTAL } from '../lib/open-source-notices';
 import { apiService } from '../services/api';
 import { useAppStore } from '../store/app-store';
@@ -253,6 +254,9 @@ function VersionValue({ value, canCopy, onCopy, copyLabel }: VersionValueProps) 
 
 export default function AboutPanel() {
   const { t } = useTranslation();
+  const supportedLanguages = SUPPORTED_LOCALES
+    .map((locale) => t(`common.languages.${locale}`))
+    .join(' · ');
   const isDeviceConnected = useAppStore((state) => state.isConnected);
   const deviceModel = useAppStore((state) => state.deviceModel);
   const storeDeviceSettings = useAppStore((state) => state.deviceSettings);
@@ -1463,7 +1467,7 @@ export default function AboutPanel() {
               <div className="flex items-center gap-3 py-3 last:pb-0">
                 <Code2 className="h-4 w-4 shrink-0 text-muted-foreground" />
                 <span className="text-xs font-medium text-foreground">
-                  中文 · English · 日本語
+                  {supportedLanguages}
                 </span>
               </div>
             </div>

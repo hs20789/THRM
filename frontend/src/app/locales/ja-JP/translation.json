@@ -107,7 +107,12 @@
     },
     "hotkey": {
       "successTitle": "機能が更新されました",
-      "failureTitle": "操作に失敗しました"
+      "failureTitle": "操作に失敗しました",
+      "curveSwitched": "ファンカーブを切り替えました: {{profile}}",
+      "smartControlOn": "スマート制御をオンにしました",
+      "smartControlOff": "スマート制御をオフにしました",
+      "manualGear": "マニュアル段階: {{gear}} {{level}}",
+      "manualGearWithRpm": "マニュアル段階: {{gear}} {{level}} ({{rpm}} RPM)"
     },
     "legionFnQ": {
       "modeChangedTitle": "Legion パフォーマンスモードが変更されました",
@@ -1001,11 +1006,19 @@
       "pawnTitle": "PawnIO ドライバー",
       "pawnDescription": "温度の取得に異常があった場合は、PawnIO ドライバーの再インストールを試してください。",
       "reinstall": "PawnIO を再インストール",
+      "command": {
+        "placeholder": "27 または 5A A5 27 02 29",
+        "send": "送信",
+        "warnMaintenance": "ファームウェア保守コマンド 0x{{hex}} はデバイスの動作状態を変更します。0x03 は固定ギアに切り替わる場合があり、0x05 は初期化ラッチのみを解除し、0x06 は 4 段階の回転数・起動設定・ライティングをリセットします。送信してもアプリ設定は自動的には復元されません。",
+        "warnDangerous": "高リスクコマンド 0x{{hex}}: ファームウェアの低レベル領域やデバッグレジスタを直接操作します。誤用するとデバイスが異常動作したり、故障したりするおそれがあります。確認してから送信してください。",
+        "warnDefault": "生コマンドはデバイスのファームウェアへ直接送信されます。誤ったコマンドはデバイスの異常動作を招くおそれがあるため、慎重に操作してください。"
+      },
       "toasts": {
         "reinstallExecuted": "PawnIO インストーラーを実行しました",
         "uninstallWarning": "PawnIO アンインストールステップから通知が返されました: {{warning}}",
         "bridgeWarning": "温度モニタリングの初期化に失敗しました: {{warning}}",
-        "reinstallFailed": "PawnIO の再インストールに失敗しました: {{error}}"
+        "reinstallFailed": "PawnIO の再インストールに失敗しました: {{error}}",
+        "sent": "{{frame}} を送信しました"
       }
     },
     "diagnostics": {

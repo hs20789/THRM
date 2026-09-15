@@ -432,6 +432,17 @@ const (
 	TimelineKeyCoreStarted        = "fanCurve.history.timeline.coreStarted"
 )
 
+// 快捷键提示的前端 i18n 键，对应 locales 里的 store.hotkey.*。理由同 TimelineEvent.LabelKey：
+// 核心服务常驻后台、不感知 GUI 当前语言，广播已本地化的中文会让非中文用户看到混排文案。
+// 事件里仍保留 message 字段承载中文原文，供系统通知与旧版前端回退使用。
+const (
+	HotkeyKeyCurveSwitched     = "store.hotkey.curveSwitched"
+	HotkeyKeySmartControlOn    = "store.hotkey.smartControlOn"
+	HotkeyKeySmartControlOff   = "store.hotkey.smartControlOff"
+	HotkeyKeyManualGear        = "store.hotkey.manualGear"
+	HotkeyKeyManualGearWithRPM = "store.hotkey.manualGearWithRpm"
+)
+
 // 温度历史后台保留时长的取值范围。放在 types 而非 temperature 包：配置默认值与归一化
 // 都要用到它，而 temperature 反过来依赖 types。
 const (

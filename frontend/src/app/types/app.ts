@@ -184,6 +184,19 @@ export interface LegionFnQSupportPayload {
   supported: boolean;
 }
 
+// 快捷键触发事件。message 是核心服务生成的中文原文，messageKey/messageParams 是等价的
+// 前端 i18n 键与插值参数——核心常驻后台、不知道 GUI 当前语言，所以文案在前端才成型。
+// messageKey 缺失（旧版核心、或失败路径带的是 err.Error()）时回退到 message。
+// messageParams 里的 gear/level 是设备协议原始值（"静音"、"中"），显示前需另行翻译。
+export interface HotkeyTriggeredPayload {
+  action: string;
+  shortcut: string;
+  success: boolean;
+  message: string;
+  messageKey?: string;
+  messageParams?: Record<string, unknown>;
+}
+
 /**
  * 飞智空间站兼容处理状态。
  * 对应 Go 侧 internal/flydigicompat.Status。

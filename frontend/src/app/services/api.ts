@@ -52,6 +52,7 @@ import type {
   DebugInfo,
   FlydigiCompatStatus,
   LegionFnQSupportPayload,
+  HotkeyTriggeredPayload,
   LegionPowerModePayload,
   ThemeMeta,
 } from '../types/app';
@@ -360,7 +361,7 @@ class ApiService {
     return EventsOn('smart-light-update', callback);
   }
 
-  onHotkeyTriggered(callback: (payload: { action: string; shortcut: string; success: boolean; message: string }) => void): () => void {
+  onHotkeyTriggered(callback: (payload: HotkeyTriggeredPayload) => void): () => void {
     return EventsOn('hotkey-triggered', callback);
   }
 

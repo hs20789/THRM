@@ -107,7 +107,12 @@
     },
     "hotkey": {
       "successTitle": "Feature updated",
-      "failureTitle": "Action failed"
+      "failureTitle": "Action failed",
+      "curveSwitched": "Fan curve switched: {{profile}}",
+      "smartControlOn": "Smart cooling enabled",
+      "smartControlOff": "Smart cooling disabled",
+      "manualGear": "Manual gear: {{gear}} {{level}}",
+      "manualGearWithRpm": "Manual gear: {{gear}} {{level}} ({{rpm}} RPM)"
     },
     "legionFnQ": {
       "modeChangedTitle": "Legion performance mode changed",
@@ -1002,11 +1007,19 @@
       "pawnTitle": "PawnIO driver",
       "pawnDescription": "Temperature reading looks wrong? Try reinstalling the PawnIO driver.",
       "reinstall": "Reinstall PawnIO",
+      "command": {
+        "placeholder": "27 or 5A A5 27 02 29",
+        "send": "Send",
+        "warnMaintenance": "Firmware maintenance command 0x{{hex}} changes how the device runs: 0x03 may lock it to a fixed gear, 0x05 only clears the init latch, and 0x06 resets all four gear speeds, startup settings and lighting. Sending it will not restore your app configuration automatically.",
+        "warnDangerous": "High-risk command 0x{{hex}}: it drives low-level firmware and debug registers directly. Misuse can make the device malfunction or brick it. Please confirm before sending.",
+        "warnDefault": "Raw commands are sent straight to the device firmware. An incorrect command can make the device malfunction, so proceed with care."
+      },
       "toasts": {
         "reinstallExecuted": "PawnIO installer executed",
         "uninstallWarning": "PawnIO uninstall step returned a notice: {{warning}}",
         "bridgeWarning": "Temperature monitor reinitialization failed: {{warning}}",
-        "reinstallFailed": "Failed to reinstall PawnIO: {{error}}"
+        "reinstallFailed": "Failed to reinstall PawnIO: {{error}}",
+        "sent": "Sent {{frame}}"
       }
     },
     "diagnostics": {

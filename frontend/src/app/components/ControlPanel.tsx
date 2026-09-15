@@ -982,13 +982,13 @@ export default function ControlPanel({ config, onConfigChange, isConnected, fanD
     try {
       const result = await apiService.sendDeviceDebugCommand(hexCommand, 900);
       setDebugCommandResult(result);
-      toast.success(`已发送 ${result.frameHex}`);
+      toast.success(t('controlPanel.debug.toasts.sent', { frame: result.frameHex }));
     } catch (error) {
       toast.error(getErrorMessage(error));
     } finally {
       setDebugCommandLoading(false);
     }
-  }, [config.debugMode, debugCommandInput, isConnected]);
+  }, [config.debugMode, debugCommandInput, isConnected, t]);
 
   const handleReinstallPawnIO = useCallback(async () => {
     setLoading('pawnIOReinstall', true);
@@ -2975,7 +2975,7 @@ export default function ControlPanel({ config, onConfigChange, isConnected, fanD
                       onKeyDown={(event) => {
                         if (event.key === 'Enter') void sendDeviceDebugCommand();
                       }}
-                      placeholder="27 或 5A A5 27 02 29"
+                      placeholder={t('controlPanel.debug.command.placeholder')}
                       className={clsx(
                         'h-9 min-w-0 flex-1 rounded-md border bg-background px-3 font-mono text-xs outline-none ring-offset-background transition-colors focus-visible:ring-2',
                         isDangerousDebugCommand
@@ -2991,21 +2991,25 @@ export default function ControlPanel({ config, onConfigChange, isConnected, fanD
                       disabled={!isConnected || !config.debugMode}
                       icon={<Play className="h-3.5 w-3.5" />}
                     >
-                      发送
+                      {t('controlPanel.debug.command.send')}
                     </Button>
                   </div>
                   <div className="mt-2 flex items-start gap-1.5 text-[11px] leading-relaxed text-red-600 dark:text-red-400">
                     <TriangleAlert className="mt-px h-3.5 w-3.5 shrink-0" />
                     {isFirmwareMaintenanceCommand ? (
                       <span className="font-semibold">
-                        固件维护命令 0x{debugCommandByte?.toString(16).toUpperCase().padStart(2, '0')} 会改变设备运行状态；0x03 可能切到固定一挡，0x05 只清除初始化锁存，0x06 会重置四挡转速、启动设置和灯光状态。直接发送不会自动恢复 APP 配置。
+                        {t('controlPanel.debug.command.warnMaintenance', {
+                          hex: debugCommandByte?.toString(16).toUpperCase().padStart(2, '0'),
+                        })}
                       </span>
                     ) : isDangerousDebugCommand ? (
                       <span className="font-semibold">
-                        高危命令 0x{debugCommandByte?.toString(16).toUpperCase().padStart(2, '0')}：直接操作固件底层/调试寄存器，误用可能导致设备异常甚至变砖，请确认后再发送。
+                        {t('controlPanel.debug.command.warnDangerous', {
+                          hex: debugCommandByte?.toString(16).toUpperCase().padStart(2, '0'),
+                        })}
                       </span>
                     ) : (
-                      <span>原始命令会直接下发到设备固件，错误命令可能导致设备异常，请谨慎操作。</span>
+                      <span>{t('controlPanel.debug.command.warnDefault')}</span>
                     )}
                   </div>
                   {debugCommandResult && (
