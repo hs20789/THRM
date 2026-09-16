@@ -32,6 +32,7 @@ import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { BRAND } from '../lib/brand';
 import { SUPPORTED_LOCALES } from '../lib/i18n';
+import { formatBackendMessage } from '../lib/display-localization';
 import { OPEN_SOURCE_GROUPS, OPEN_SOURCE_TOTAL } from '../lib/open-source-notices';
 import { apiService } from '../services/api';
 import { useAppStore } from '../store/app-store';
@@ -355,7 +356,10 @@ export default function AboutPanel() {
     ? storeDeviceSettings
     : queriedDeviceSettings || storeDeviceSettings;
   const firmwareVersion = displayedDeviceSettings?.firmwareVersion || '';
-  const firmwareError = firmwareQueryError || displayedDeviceSettings?.firmwareReadError || '';
+  // 원문(중국어일 수 있음)을 state에 담아두고 렌더 시점에 현재 언어로 변환한다.
+  // 인식 못 한 원문은 그대로 표시되어 진단 정보가 남는다.
+  const firmwareError = formatBackendMessage(
+    firmwareQueryError || displayedDeviceSettings?.firmwareReadError || '', t);
   const firmwareUnsupported = displayedDeviceSettings?.firmwareReadStatus === 'unsupported';
 
   const specItems = useMemo(

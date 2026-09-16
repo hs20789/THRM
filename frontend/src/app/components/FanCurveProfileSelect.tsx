@@ -6,6 +6,7 @@ import { Plus, Settings2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Select } from './ui/index';
+import { getProfileDisplayName } from '../lib/display-localization';
 
 export type FanCurveProfileOption = {
   id: string;
@@ -39,8 +40,10 @@ export default function FanCurveProfileSelect({
 }: FanCurveProfileSelectProps) {
   const { t } = useTranslation();
   const options = useMemo(
-    () => profiles.map((profile) => ({ value: profile.id, label: profile.name })),
-    [profiles]
+    // 예약 ID("default")를 가진 자동 생성 이름만 표시 시점에 번역한다.
+    // 사용자가 직접 지은 이름은 원문 그대로 — 저장된 값은 어느 쪽도 바뀌지 않는다.
+    () => profiles.map((profile) => ({ value: profile.id, label: getProfileDisplayName(profile, t) })),
+    [profiles, t]
   );
 
   const resolvedPlaceholder = placeholder || t('fanCurveProfileSelect.placeholder');

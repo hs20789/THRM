@@ -48,6 +48,8 @@ import CoolingBenefit from './CoolingBenefit';
 import { toast } from 'sonner';
 import { ToggleSwitch, Button, Badge, Select, Slider, NumberInput, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from './ui/index';
 import clsx from 'clsx';
+import { i18n } from '../lib/i18n';
+import { formatBackendMessage, getProfileDisplayName } from '../lib/display-localization';
 
 const LOW_RPM_WARNING_DATE_KEY = 'fanCurveLowRpmWarningDate';
 const FAN_CURVE_MIN_TEMP = 30;
@@ -88,7 +90,8 @@ const DEFAULT_SCHEDULE_RULE = {
 const WEEKDAY_SEQUENCE = [1, 2, 3, 4, 5, 6, 0];
 
 function getErrorMessage(error: unknown) {
-  return error instanceof Error ? error.message : String(error);
+  // 后端错误是中文成句，按当前语言渲染；认不出的原文原样返回，排障信息不丢。
+  return formatBackendMessage(error instanceof Error ? error.message : String(error), i18n.t);
 }
 
 function normalizeLearningBias(value: unknown): string {
@@ -698,8 +701,8 @@ const FanCurve = memo(function FanCurve({ config, onConfigChange, isConnected, f
   ]), [t, locale]);
   const scheduleProfileOptions = useMemo(() => curveProfiles.map((profile) => ({
     value: profile.id,
-    label: profile.name,
-  })), [curveProfiles]);
+    label: getProfileDisplayName(profile, t),
+  })), [curveProfiles, t]);
   const currentScheduleRule = useMemo(() => {
     if (!timeCurveSchedule.enabled) {
       return null;

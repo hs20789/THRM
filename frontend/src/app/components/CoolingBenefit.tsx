@@ -44,6 +44,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from './ui/index';
+import { i18n } from '../lib/i18n';
+import { formatBackendMessage } from '../lib/display-localization';
 
 // 分类配色，固定顺序、不循环使用。选择上限就是配色槽位数——超出之后再加线条
 // 就只能重复颜色，那样图例反而会骗人。
@@ -68,7 +70,8 @@ interface CoolingBenefitProps {
 }
 
 function getErrorMessage(error: unknown) {
-  return error instanceof Error ? error.message : String(error);
+  // 后端错误是中文成句，按当前语言渲染；认不出的原文原样返回，排障信息不丢。
+  return formatBackendMessage(error instanceof Error ? error.message : String(error), i18n.t);
 }
 
 function formatMinutes(ms: number) {

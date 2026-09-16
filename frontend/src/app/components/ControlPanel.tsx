@@ -71,6 +71,8 @@ import {
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
+import { i18n } from '../lib/i18n';
+import { formatBackendMessage, formatDebugInfo } from '../lib/display-localization';
 
 interface ControlPanelProps {
   config: types.AppConfig;
@@ -343,7 +345,8 @@ const LIGHT_COLOR_PRESETS = [
 ];
 
 function getErrorMessage(error: unknown) {
-  return error instanceof Error ? error.message : String(error);
+  // 后端错误是中文成句，按当前语言渲染；认不出的原文原样返回，排障信息不丢。
+  return formatBackendMessage(error instanceof Error ? error.message : String(error), i18n.t);
 }
 
 function translateWorkMode(
@@ -2963,7 +2966,7 @@ export default function ControlPanel({ config, onConfigChange, isConnected, fanD
 
                 {debugInfo && (
                   <div className="min-h-56 max-h-[min(55vh,30rem)] w-full cursor-text overflow-auto rounded-xl border border-border bg-background overscroll-contain select-text">
-                    <pre className="min-w-max whitespace-pre p-3 font-mono text-xs leading-5 text-foreground/90">{JSON.stringify(debugInfo, null, 2)}</pre>
+                    <pre className="min-w-max whitespace-pre p-3 font-mono text-xs leading-5 text-foreground/90">{formatDebugInfo(debugInfo, t)}</pre>
                   </div>
                 )}
 

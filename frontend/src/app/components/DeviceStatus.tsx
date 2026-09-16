@@ -35,6 +35,7 @@ import { apiService } from '../services/api';
 import { useTemperatureHistory } from '../hooks/useTemperatureHistory';
 import { clipHistoryToRecentWindow, downsampleHistoryPoints, HOME_CHART_WINDOW_MS, type TemperatureHistoryPoint } from '../lib/temperature-history';
 import { getManualGearLabel, getReportedMaxRpm } from '../lib/manualGearPresets';
+import { formatBackendMessage } from '../lib/display-localization';
 import type { DeviceSettings } from '../types/app';
 import { useTranslation } from 'react-i18next';
 import {
@@ -867,9 +868,11 @@ export default function DeviceStatus({
   // 解释的"无数据"。因此告警条对这两种情况都要出现。
   const cpuTempError = temperature?.cpuTempError?.trim() || '';
   const hasBridgeWarning = isConnected && (temperature?.bridgeOk === false || cpuTempError !== '');
+  // 核心送上来的是中文成句，这里按当前语言渲染；认不出的原文原样透传，排障信息不丢。
+  // 翻译发生在渲染期而非 store，切换语言时这条告警会跟着重新渲染。
   const warningMessage = temperature?.bridgeOk === false
-    ? (temperature?.bridgeMessage || t('deviceStatus.bridgeWarning.default'))
-    : cpuTempError;
+    ? (temperature?.bridgeMessage ? formatBackendMessage(temperature.bridgeMessage, t) : t('deviceStatus.bridgeWarning.default'))
+    : formatBackendMessage(cpuTempError, t);
 
   useEffect(() => {
     if (!hasBridgeWarning) {
@@ -1413,7 +1416,7 @@ export default function DeviceStatus({
                     )}
                     {bridgeStatus.transport && <p>{t('deviceStatus.bridgeWarning.transportLine', { transport: bridgeStatus.transport })}</p>}
                     {bridgeStatus.pipeName && <p>{t('deviceStatus.bridgeWarning.pipeLine', { pipe: bridgeStatus.pipeName })}</p>}
-                    {bridgeStatus.lastError && bridgeStatus.lastError !== temperature?.bridgeMessage && <p>{t('deviceStatus.bridgeWarning.diagnosticsLine', { message: bridgeStatus.lastError })}</p>}
+                    {bridgeStatus.lastError && bridgeStatus.lastError !== temperature?.bridgeMessage && <p>{t('deviceStatus.bridgeWarning.diagnosticsLine', { message: formatBackendMessage(bridgeStatus.lastError, t) })}</p>}
                   </div>
                 )}
                 <div className="mt-2 flex flex-wrap items-center gap-2">

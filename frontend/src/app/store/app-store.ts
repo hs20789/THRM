@@ -12,106 +12,11 @@ import {
 } from '../lib/temperature-history';
 import type { TemperatureHistoryPoint, TimelineEvent } from '../lib/temperature-history';
 import { i18n } from '../lib/i18n';
-import { getManualGearLabel, getManualLevelLabel } from '../lib/manualGearPresets';
-import { toast } from 'sonner';
+import type { DisplayMessage } from '../lib/display-localization';
+import { displayToast as toast } from '../lib/display-toast';
 import type { DeviceSettings } from '../types/app';
 
-const getBridgeWarningMessage = () => i18n.t('store.bridgeWarning.default');
-
-// 核心服务（Go）生成的成品文案。核心常驻后台、不感知 GUI 当前语言，所以这些整句一旦
-// 直接渲染，切到日/韩/英的用户就会看到中文。下面按前缀识别后换成本地化文案。
-//
-// 这些不是协议值，只是"曾经由某个版本的核心发出过"的提示语。历史上核心用过中/英/日三
-// 种文案，都要认得；核心侧文案若改动，这里同步补一条即可，认不出时走带 detail 的兜底。
-const CORE_SERVICE_UNAVAILABLE_PREFIXES = [
-  '核心服务不可用',
-  'Core service is unavailable',
-  'Core サービスを利用できません',
-];
-
-// 核心的"带原因"形态：核心服务不可用：{detail}。请检查 ...（ipc_client.go
-// coreServiceUnavailableMessage）。detail 是唯一有信息量的部分，换文案时必须捞出来带走，
-// 否则排障线索就没了。捞不到就按无 detail 的形态处理。
-const CORE_SERVICE_DETAIL_PATTERN = /^核心服务不可用[：:]\s*(.+?)。请检查/;
-
-// 桥接（Windows 专用）读温失败时核心塞进 BridgeMsg 的两句固定提示，内容等同
-// store.bridgeWarning.default。注意只匹配这两句常量；bridgeTemp.Error 那种由 C# 侧
-// 生成的任意错误原文不在此列，要原样透传，否则会吞掉唯一的排障线索。
-const BRIDGE_WARNING_PREFIXES = [
-  '桥接程序未返回有效温度',
-  'CPU/GPU 温度读取失败',
-];
-
-// 核心在 system_device.go 里广播的设备错误常量。
-const DEVICE_CONNECT_FAILED = '连接失败';
-
-const matchesAnyPrefix = (text: string, prefixes: string[]) =>
-  prefixes.some((prefix) => text.startsWith(prefix));
-
-// 把后端成品文案换成本地化文案，同时在控制台留下原文。原文不会进 UI，但排障时
-// （尤其是只能拿到前端 DevTools 的场景）还看得见。
-const localizeBackendMessage = (raw: string, localized: string) => {
-  console.warn('[i18n] backend message replaced:', raw);
-  return localized;
-};
-
-const getCoreServiceErrorMessage = (detail?: string) => {
-  const trimmed = detail?.trim();
-  if (!trimmed) {
-    return i18n.t('store.coreService.unavailable');
-  }
-  // 核心生成的整句：丢掉外壳换成本地化文案，但要保住里面的 detail。
-  const withDetail = trimmed.match(CORE_SERVICE_DETAIL_PATTERN);
-  if (withDetail) {
-    return localizeBackendMessage(
-      trimmed,
-      i18n.t('store.coreService.unavailableWithDetail', { detail: withDetail[1] }),
-    );
-  }
-  if (matchesAnyPrefix(trimmed, CORE_SERVICE_UNAVAILABLE_PREFIXES)) {
-    return localizeBackendMessage(trimmed, i18n.t('store.coreService.unavailable'));
-  }
-  // 已经是当前语言的整句（重复处理同一条错误时会走到）：原样返回，避免嵌套包装。
-  if (trimmed.includes(i18n.t('store.coreService.unavailable'))) {
-    return trimmed;
-  }
-  // 其余是带信息量的 detail（核心传上来的具体原因），保留并包进本地化外壳。
-  return i18n.t('store.coreService.unavailableWithDetail', { detail: trimmed });
-};
-
-const getLocalizedBridgeMessage = (bridgeMessage: string) => {
-  if (!bridgeMessage) {
-    return getBridgeWarningMessage();
-  }
-  if (matchesAnyPrefix(bridgeMessage, BRIDGE_WARNING_PREFIXES)) {
-    return localizeBackendMessage(bridgeMessage, getBridgeWarningMessage());
-  }
-  // C# 桥接生成的任意错误原文——无法映射，原样显示好过丢失信息。
-  return bridgeMessage;
-};
-
-const getLocalizedDeviceError = (errorMsg: string) => {
-  if (errorMsg?.trim() === DEVICE_CONNECT_FAILED) {
-    return localizeBackendMessage(errorMsg, i18n.t('store.errors.connectDevice'));
-  }
-  return errorMsg;
-};
-
-// 核心在 messageParams 里放的 gear/level 是设备协议原始值（"静音"、"中"），不是文案。
-// 这里只在插值前翻成当前语言，值本身不动。
-const translateHotkeyParams = (params?: Record<string, unknown>) => {
-  if (!params) {
-    return undefined;
-  }
-  const translated: Record<string, unknown> = { ...params };
-  if (typeof params.gear === 'string') {
-    translated.gear = getManualGearLabel(params.gear);
-  }
-  if (typeof params.level === 'string') {
-    translated.level = getManualLevelLabel(params.level);
-  }
-  return translated;
-};
+const getCoreServiceErrorMessage = (raw?: string): DisplayMessage => ({ kind: 'core', raw });
 
 const isCoreServiceFailureDetail = (detail?: string) => {
   const normalized = detail?.toLowerCase() ?? '';
@@ -136,13 +41,10 @@ interface AppStore {
   fanData: types.FanData | null;
   temperature: types.TemperatureData | null;
   legionFnQSupported: boolean;
-  bridgeWarning: string | null;
-  coreServiceError: string | null;
-  // 上面两条是渲染用的本地化文案；下面两条是后端原文，只做保留不进 UI，用于排障。
-  bridgeWarningRaw: string | null;
-  coreServiceErrorRaw: string | null;
+  bridgeWarning: DisplayMessage | null;
+  coreServiceError: DisplayMessage | null;
   isLoading: boolean;
-  error: string | null;
+  error: DisplayMessage | null;
   activeTab: ActiveTab;
   curveFocusTarget: CurveFocusTarget | null;
   sessionHistoryPoints: TemperatureHistoryPoint[];
@@ -179,8 +81,6 @@ export const useAppStore = create<AppStore>((set, get) => ({
   legionFnQSupported: false,
   bridgeWarning: null,
   coreServiceError: null,
-  bridgeWarningRaw: null,
-  coreServiceErrorRaw: null,
   isLoading: true,
   error: null,
   activeTab: 'status',
@@ -201,8 +101,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
     const bridgeFailed = data?.bridgeOk === false;
     set({
       temperature: data,
-      bridgeWarning: bridgeFailed ? getLocalizedBridgeMessage(bridgeMessage) : null,
-      bridgeWarningRaw: bridgeFailed ? bridgeMessage || null : null,
+      bridgeWarning: bridgeFailed ? { kind: 'bridge', raw: bridgeMessage } : null,
     });
   },
 
@@ -255,7 +154,6 @@ export const useAppStore = create<AppStore>((set, get) => ({
         fanData: deviceStatus.currentData || null,
         legionFnQSupported: debugInfo?.legionFnQSupported === true,
         coreServiceError,
-        coreServiceErrorRaw: deviceStatus.error || null,
         error: coreServiceError,
       });
 
@@ -265,9 +163,8 @@ export const useAppStore = create<AppStore>((set, get) => ({
       const detail = error instanceof Error ? error.message : undefined;
       const coreServiceError = isCoreServiceFailureDetail(detail) ? getCoreServiceErrorMessage(detail) : null;
       set({
-        error: coreServiceError || i18n.t('store.errors.initializeApp'),
+        error: coreServiceError || { key: 'store.errors.initializeApp' },
         coreServiceError,
-        coreServiceErrorRaw: coreServiceError ? detail || null : null,
       });
     } finally {
       set({ isLoading: false });
@@ -303,7 +200,6 @@ export const useAppStore = create<AppStore>((set, get) => ({
         fanData: deviceStatus.currentData || null,
         legionFnQSupported: debugInfo?.legionFnQSupported === true,
         coreServiceError,
-        coreServiceErrorRaw: deviceStatus.error || null,
         error: coreServiceError,
       });
 
@@ -327,13 +223,12 @@ export const useAppStore = create<AppStore>((set, get) => ({
           deviceProductId: status?.productId || get().deviceProductId,
           deviceModel: status?.model || get().deviceModel,
           coreServiceError,
-          coreServiceErrorRaw: status?.error || null,
           error: coreServiceError,
         });
       }
     } catch (error) {
       console.error('连接失败:', error);
-      set({ error: i18n.t('store.errors.connectDevice') });
+      set({ error: { key: 'store.errors.connectDevice' } });
     }
   },
 
@@ -352,8 +247,8 @@ export const useAppStore = create<AppStore>((set, get) => ({
       set({ config, error: null });
     } catch (error) {
       console.error('配置更新失败:', error);
-      set({ error: i18n.t('store.errors.saveConfig') });
-      toast.error(i18n.t('store.errors.saveConfig'));
+      set({ error: { key: 'store.errors.saveConfig' } });
+      toast.error({ key: 'store.errors.saveConfig' });
       throw error;
     }
   },
@@ -389,7 +284,6 @@ export const useAppStore = create<AppStore>((set, get) => ({
         const coreServiceError = getCoreServiceErrorMessage(message);
         set({
           coreServiceError,
-          coreServiceErrorRaw: message || null,
           error: coreServiceError,
           isConnected: false,
           deviceProductId: null,
@@ -406,7 +300,6 @@ export const useAppStore = create<AppStore>((set, get) => ({
         const recovering = get().coreServiceError !== null;
         set((state) => ({
           coreServiceError: null,
-          coreServiceErrorRaw: null,
           error: state.coreServiceError && state.error === state.coreServiceError ? null : state.error,
         }));
         if (recovering) {
@@ -434,7 +327,6 @@ export const useAppStore = create<AppStore>((set, get) => ({
           deviceModel: info.model || null,
           deviceSettings: settings,
           coreServiceError: null,
-          coreServiceErrorRaw: null,
           error: null,
         });
       })
@@ -464,7 +356,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
     unsubscribers.push(
       deviceService.onDeviceError((errorMsg) => {
         console.error('设备错误:', errorMsg);
-        set({ error: getLocalizedDeviceError(errorMsg) });
+        set({ error: { raw: errorMsg } });
       })
     );
 
@@ -491,18 +383,16 @@ export const useAppStore = create<AppStore>((set, get) => ({
     unsubscribers.push(
       deviceService.onHotkeyTriggered((payload) => {
         const message = typeof payload?.message === 'string' ? payload.message : '';
-        // 核心带了 i18n 键就用它（成功路径都有），否则回退到核心给的中文原文——失败路径
-        // 送上来的是 err.Error()，没有对应的键。
         const messageKey = typeof payload?.messageKey === 'string' ? payload.messageKey : '';
-        const description = messageKey
-          ? i18n.t(messageKey, translateHotkeyParams(payload?.messageParams))
-          : message;
-        if (!description) return;
+        const description: DisplayMessage = {
+          kind: 'hotkey', raw: message, key: messageKey, params: payload?.messageParams,
+        };
+        if (!message && !messageKey) return;
         const ok = payload?.success !== false;
         if (ok) {
-          toast.success(i18n.t('store.hotkey.successTitle'), { description, duration: 2600 });
+          toast.success({ key: 'store.hotkey.successTitle' }, { description, duration: 2600 });
         } else {
-          toast.error(i18n.t('store.hotkey.failureTitle'), { description, duration: 3200 });
+          toast.error({ key: 'store.hotkey.failureTitle' }, { description, duration: 3200 });
         }
       })
     );

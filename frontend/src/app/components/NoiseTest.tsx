@@ -25,6 +25,8 @@ import {
   type SweepProgress,
 } from '../lib/noise-test';
 import { Badge, Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, Select } from './ui/index';
+import { i18n } from '../lib/i18n';
+import { formatBackendMessage } from '../lib/display-localization';
 
 const SWEEP_MIN_RPM = 1000;
 const SWEEP_MAX_RPM = 4000;
@@ -44,7 +46,8 @@ interface NoiseTestProps {
 }
 
 function getErrorMessage(error: unknown) {
-  return error instanceof Error ? error.message : String(error);
+  // 后端错误是中文成句，按当前语言渲染；认不出的原文原样返回，排障信息不丢。
+  return formatBackendMessage(error instanceof Error ? error.message : String(error), i18n.t);
 }
 
 // 把 dBFS(A) 粗略映射成 0-100 的电平条

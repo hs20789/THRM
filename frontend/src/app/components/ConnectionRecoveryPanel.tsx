@@ -6,6 +6,7 @@ import { AlertTriangle, FileArchive, RefreshCw, Stethoscope } from 'lucide-react
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { apiService } from '../services/api';
+import { formatBackendMessage } from '../lib/display-localization';
 
 interface ConnectionRecoveryPanelProps {
   connected: boolean;
@@ -31,7 +32,7 @@ export default function ConnectionRecoveryPanel({
       await onRetry();
       toast.success(t('connectionRecovery.toasts.retryStarted'));
     } catch (error) {
-      toast.error(t('connectionRecovery.toasts.recoveryFailed'), { description: error instanceof Error ? error.message : String(error) });
+      toast.error(t('connectionRecovery.toasts.recoveryFailed'), { description: formatBackendMessage(error instanceof Error ? error.message : String(error), t) });
     } finally {
       setBusy(null);
     }
@@ -47,7 +48,7 @@ export default function ConnectionRecoveryPanel({
         toast.warning(t('connectionRecovery.toasts.temperatureUnavailable'), { description: t('connectionRecovery.toasts.temperatureUnavailableDescription') });
       }
     } catch (error) {
-      toast.error(t('connectionRecovery.toasts.temperatureTestFailed'), { description: error instanceof Error ? error.message : String(error) });
+      toast.error(t('connectionRecovery.toasts.temperatureTestFailed'), { description: formatBackendMessage(error instanceof Error ? error.message : String(error), t) });
     } finally {
       setBusy(null);
     }
@@ -59,7 +60,7 @@ export default function ConnectionRecoveryPanel({
       const path = await apiService.exportDiagnosticPackage();
       if (path) toast.success(t('connectionRecovery.toasts.diagnosticsExported'), { description: path });
     } catch (error) {
-      toast.error(t('connectionRecovery.toasts.diagnosticsExportFailed'), { description: error instanceof Error ? error.message : String(error) });
+      toast.error(t('connectionRecovery.toasts.diagnosticsExportFailed'), { description: formatBackendMessage(error instanceof Error ? error.message : String(error), t) });
     } finally {
       setBusy(null);
     }

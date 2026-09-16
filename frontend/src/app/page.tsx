@@ -1,6 +1,8 @@
 'use client';
 
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
+import { formatDisplayMessage } from './lib/display-localization';
 import dynamic from 'next/dynamic';
 import { types } from '../../wailsjs/go/models';
 import { useShallow } from 'zustand/react/shallow';
@@ -17,6 +19,7 @@ const AboutPanel = dynamic(() => import('./components/AboutPanel'), { ssr: false
 
 export default function Home() {
   useAppBootstrap();
+  const { t } = useTranslation();
 
   const view = useAppStore(
     useShallow((state) => ({
@@ -57,7 +60,7 @@ export default function Home() {
   }
 
   if (view.error && !view.config) {
-    return <AppFatalError message={view.error} onRetry={initializeApp} />;
+    return <AppFatalError message={formatDisplayMessage(view.error, t)} onRetry={initializeApp} />;
   }
 
   return (
@@ -68,8 +71,8 @@ export default function Home() {
       fanData={view.fanData}
       temperature={view.temperature}
       autoControl={safeConfig.autoControl}
-      error={view.error}
-      bridgeWarning={view.bridgeWarning}
+      error={view.error ? formatDisplayMessage(view.error, t) : null}
+      bridgeWarning={view.bridgeWarning ? formatDisplayMessage(view.bridgeWarning, t) : null}
       onDismissBridgeWarning={clearBridgeWarning}
       statusContent={
         <DeviceStatus
@@ -80,7 +83,7 @@ export default function Home() {
           fanData={view.fanData}
           temperature={view.temperature}
           config={safeConfig}
-          coreServiceError={view.coreServiceError}
+          coreServiceError={view.coreServiceError ? formatDisplayMessage(view.coreServiceError, t) : null}
           onConnect={connectDevice}
           onDisconnect={disconnectDevice}
           onConfigChange={updateConfig}

@@ -1,4 +1,5 @@
 import { i18n } from './i18n';
+import type { TFunction } from 'i18next';
 
 export interface ManualGearPresetLevel {
   level: string;
@@ -153,14 +154,16 @@ export const normalizeManualGearRpmMap = (custom?: ManualGearRpmMap | null): Man
   return out;
 };
 
-export const getManualGearLabel = (gear?: string | null): string => {
+export const getManualGearLabel = (gear?: string | null, t: TFunction = i18n.t): string => {
   if (!gear) return '';
-  return i18n.t(MANUAL_GEAR_LABEL_KEYS[gear] || gear);
+  const unknown = gear.match(/^未知\((0x[\da-f]+)\)$/i);
+  if (unknown) return t('displayErrors.unknownValue', { code: unknown[1] });
+  return t(MANUAL_GEAR_LABEL_KEYS[gear] || gear);
 };
 
-export const getManualLevelLabel = (level?: string | null): string => {
+export const getManualLevelLabel = (level?: string | null, t: TFunction = i18n.t): string => {
   if (!level) return '';
-  return i18n.t(MANUAL_LEVEL_LABEL_KEYS[level] || level);
+  return t(MANUAL_LEVEL_LABEL_KEYS[level] || level);
 };
 
 const MAX_GEAR_CODE_TO_RPM: Record<number, number> = {

@@ -364,7 +364,7 @@ func (a *CoreApp) toggleCurveProfileByHotkey() (hotkeyResult, error) {
 	}
 	return hotkeyResult{
 		Key:    types.HotkeyKeyCurveSwitched,
-		Params: map[string]any{"profile": profile.Name},
+		Params: map[string]any{"profile": profile.Name, "profileId": profile.ID},
 		Text:   fmt.Sprintf("温控曲线已切换: %s", profile.Name),
 	}, nil
 }
