@@ -4,6 +4,7 @@ import clsx from 'clsx';
 import { Plus, Settings2, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from './ui/index';
+import { getProfileDisplayName } from '../lib/display-localization';
 
 type FanCurveProfileOption = {
   id: string;
@@ -42,6 +43,9 @@ export default function FanCurveProfileToolbar({
         {profiles.map((profile) => {
           const isActive = profile.id === activeProfileId;
           const deletable = profiles.length > 1;
+          // 예약 ID를 가진 시스템 기본 프로필만 표시 시점에 번역한다. 사용자가 지은
+          // 이름은 그대로 두며, 저장된 값은 어느 쪽도 바뀌지 않는다.
+          const displayName = getProfileDisplayName(profile, t);
           return (
             <div key={profile.id} className="group relative flex shrink-0">
               <button
@@ -57,7 +61,7 @@ export default function FanCurveProfileToolbar({
                 )}
                 aria-current={isActive ? 'true' : undefined}
               >
-                {profile.name}
+                {displayName}
               </button>
               {deletable && (
                 <button
@@ -70,8 +74,8 @@ export default function FanCurveProfileToolbar({
                       ? 'text-primary/70 opacity-100 hover:bg-primary/15 hover:text-destructive'
                       : 'text-muted-foreground opacity-0 hover:bg-muted hover:text-destructive group-hover:opacity-100 group-focus-within:opacity-100',
                   )}
-                  aria-label={t('fanCurve.profiles.deleteProfileLabel', { name: profile.name })}
-                  title={t('fanCurve.profiles.deleteProfileLabel', { name: profile.name })}
+                  aria-label={t('fanCurve.profiles.deleteProfileLabel', { name: displayName })}
+                  title={t('fanCurve.profiles.deleteProfileLabel', { name: displayName })}
                 >
                   <X className="h-3 w-3" />
                 </button>

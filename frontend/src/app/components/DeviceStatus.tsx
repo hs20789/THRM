@@ -35,7 +35,7 @@ import { apiService } from '../services/api';
 import { useTemperatureHistory } from '../hooks/useTemperatureHistory';
 import { clipHistoryToRecentWindow, downsampleHistoryPoints, HOME_CHART_WINDOW_MS, type TemperatureHistoryPoint } from '../lib/temperature-history';
 import { getManualGearLabel, getReportedMaxRpm } from '../lib/manualGearPresets';
-import { formatBackendMessage } from '../lib/display-localization';
+import { formatBackendMessage, getProfileDisplayName } from '../lib/display-localization';
 import type { DeviceSettings } from '../types/app';
 import { useTranslation } from 'react-i18next';
 import {
@@ -855,7 +855,8 @@ export default function DeviceStatus({
 }: DeviceStatusProps) {
   const { t } = useTranslation();
   const [bridgeWarningReady, setBridgeWarningReady] = useState(false);
-  const [activeCurveProfileName, setActiveCurveProfileName] = useState('');
+  // 원문(id + name)을 담아두고 렌더 시점에 표시명으로 바꾼다. 저장 값은 그대로다.
+  const [activeCurveProfile, setActiveCurveProfile] = useState<{ id: string; name: string } | null>(null);
   const [bridgeStatus, setBridgeStatus] = useState<BridgeRuntimeStatus | null>(null);
   const {
     points: temperatureHistory,
@@ -919,11 +920,11 @@ export default function DeviceStatus({
         const preferredActiveId = ((config as any).activeFanCurveProfileId || payload?.activeId || profiles[0]?.id || '') as string;
         const activeProfile = profiles.find((p) => p.id === preferredActiveId) ?? profiles[0];
         if (!cancelled) {
-          setActiveCurveProfileName(activeProfile?.name || '');
+          setActiveCurveProfile(activeProfile?.id ? { id: activeProfile.id, name: activeProfile.name || '' } : null);
         }
       } catch {
         if (!cancelled) {
-          setActiveCurveProfileName('');
+          setActiveCurveProfile(null);
         }
       }
     };
@@ -960,6 +961,7 @@ export default function DeviceStatus({
     : config.customSpeedEnabled
       ? t('deviceStatus.mode.fixedDescription', { rpm: config.customSpeedRPM || fanData?.currentRpm || '--' })
       : t('deviceStatus.mode.manualDescription');
+  const activeCurveProfileName = activeCurveProfile ? getProfileDisplayName(activeCurveProfile, t) : '';
   const modeDisplayTitle = activeCurveProfileName
     ? t('deviceStatus.mode.withProfile', { mode: modeTitle, profile: activeCurveProfileName })
     : modeTitle;

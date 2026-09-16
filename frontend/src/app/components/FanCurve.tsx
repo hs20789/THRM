@@ -2588,7 +2588,7 @@ const FanCurve = memo(function FanCurve({ config, onConfigChange, isConnected, f
                   hasUnsavedChanges && pendingDeleteProfileId === activeProfileId
                     ? 'fanCurve.profiles.deleteUnsavedDescription'
                     : 'fanCurve.profiles.deleteDescription',
-                  { name: pendingDeleteProfile?.name || '' },
+                  { name: pendingDeleteProfile ? getProfileDisplayName(pendingDeleteProfile, t) : '' },
                 )}
               </DialogDescription>
             </DialogHeader>
