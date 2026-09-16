@@ -691,6 +691,96 @@ jobs:
 
           ls -lh build/dist/*.pkg.tar.zst
 
+      - name: Package RPM artifact (.rpm)
+        shell: bash
+        env:
+          THRM_BUILD_VERSION: ${{ needs.prepare-release.outputs.build_version }}
+          PREVIOUS_STABLE_TAG: ${{ needs.prepare-release.outputs.previous_stable_tag }}
+        run: |
+          set -euo pipefail
+
+          PRODUCT_VER=$(grep -oE '"productVersion"[[:space:]]*:[[:space:]]*"[^"]+"' wails.json | sed -E 's/.*"([^"]+)"$/\1/')
+          VER="${THRM_BUILD_VERSION:-$PRODUCT_VER}"
+          [ -n "$VER" ] || VER="dev"
+
+          # rpm 的版本序和 dpkg 同构，只是符号不同：~ 排在空之前，^ 排在空之后。
+          # 因此这里能照搬 .deb 那套判断，不必像 Arch 那样绕到"上一个正式版 + .r日期"。
+          #   领先（正在开发 3.7.0，上个正式版 3.6.5）→ 3.7.0~nightly.X，低于 3.7.0
+          #   持平（3.7.0 已发布、版本号还没 bump）→ 3.7.0^nightly.X，高于 3.7.0
+          # rpm 的版本段不允许出现 '-'，nightly 编号里的连字符统一换成点。
+          PREV_STABLE="${PREVIOUS_STABLE_TAG#[vV]}"
+          RPM_REL=1
+          case "$VER" in
+            nightly-*)
+              NIGHTLY_ID="${VER#nightly-}"
+              NIGHTLY_ID="${NIGHTLY_ID//-/.}"
+              if [ -n "$PREV_STABLE" ] && ! dpkg --compare-versions "$PRODUCT_VER" gt "$PREV_STABLE"; then
+                RPM_VER="${PRODUCT_VER}^nightly.${NIGHTLY_ID}"
+                RPM_EXPECT=11   # rpmdev-vercmp: 11 = 第一个参数更高，即 ^ 高于正式版
+              else
+                RPM_VER="${PRODUCT_VER}~nightly.${NIGHTLY_ID}"
+                RPM_EXPECT=12   # 12 = 第二个参数更高，即 ~ 低于正式版
+              fi
+              ;;
+            v*|V*) RPM_VER="${VER#[vV]}" ;;
+            *)     RPM_VER="$VER" ;;
+          esac
+          RPM_VER="${RPM_VER//-/.}"
+          echo "RPM version: $RPM_VER-$RPM_REL"
+
+          BUILDER_UID=$(id -u)
+          BUILDER_GID=$(id -g)
+          docker run --rm \
+            --env "BUILDER_UID=$BUILDER_UID" \
+            --env "BUILDER_GID=$BUILDER_GID" \
+            --env "RPM_VER=$RPM_VER" \
+            --env "RPM_REL=$RPM_REL" \
+            --env "RPM_EXPECT=${RPM_EXPECT:-}" \
+            --env "RPM_BASE=$PRODUCT_VER" \
+            --volume "$GITHUB_WORKSPACE:/workspace" \
+            --workdir /workspace \
+            fedora:42 \
+            bash -euc '
+              dnf install -y -q rpm-build rpmlint rpmdevtools >/dev/null
+
+              # 版本序是这段逻辑存在的全部意义，交给 rpm 自己判定，别靠人推断。
+              if [ -n "${RPM_EXPECT:-}" ]; then
+                set +e; rpmdev-vercmp "$RPM_VER" "$RPM_BASE" >/dev/null; actual=$?; set -e
+                if [ "$actual" != "$RPM_EXPECT" ]; then
+                  echo "预发布 $RPM_VER 与正式版 $RPM_BASE 的先后关系不符（期望 $RPM_EXPECT，实际 $actual）" >&2
+                  exit 1
+                fi
+              fi
+
+              RPMTOP=/tmp/rpmbuild
+              rm -rf "$RPMTOP"; mkdir -p "$RPMTOP/SOURCES"
+              install -m0755 build/thrm                   "$RPMTOP/SOURCES/thrm"
+              install -m0755 build/thrm-core              "$RPMTOP/SOURCES/thrm-core"
+              install -m0644 packaging/linux/thrm.desktop "$RPMTOP/SOURCES/thrm.desktop"
+              install -m0644 build/appicon.png            "$RPMTOP/SOURCES/thrm.png"
+              install -m0644 scripts/99-flydigi-fan.rules "$RPMTOP/SOURCES/99-flydigi-fan.rules"
+              install -m0644 LICENSE                      "$RPMTOP/SOURCES/LICENSE"
+
+              rpmbuild -bb packaging/linux/thrm.spec \
+                --define "_topdir $RPMTOP" \
+                --define "thrm_version $RPM_VER" \
+                --define "thrm_release $RPM_REL"
+
+              mkdir -p build/dist
+              find "$RPMTOP/RPMS" -name "*.rpm" -exec install -m0644 {} build/dist/ \;
+              chown -R "$BUILDER_UID:$BUILDER_GID" build/dist
+
+              RPMFILE=$(ls build/dist/*.rpm)
+              echo "===== rpm -qip ====="; rpm -qip "$RPMFILE"
+              echo "===== rpm -qlp ====="; rpm -qlp "$RPMFILE"
+              echo "===== requires ====="; rpm -qp --requires "$RPMFILE"
+              # rpmlint 对预编译二进制重打包必然有噪声（PIE、man page、changelog），
+              # 用来看报告而不是当门禁，因此不让它的退出码决定构建成败。
+              echo "===== rpmlint ====="; rpmlint "$RPMFILE" || true
+            '
+
+          ls -lh build/dist/*.rpm
+
       - name: Upload PR artifacts
         if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4
@@ -700,6 +790,7 @@ jobs:
             build/dist/*.tar.gz
             build/dist/*.deb
             build/dist/*.pkg.tar.zst
+            build/dist/*.rpm
           if-no-files-found: error
           retention-days: 14
 
@@ -712,6 +803,7 @@ jobs:
             build/dist/*.tar.gz
             build/dist/*.deb
             build/dist/*.pkg.tar.zst
+            build/dist/*.rpm
           if-no-files-found: error
           retention-days: 7
 
@@ -724,6 +816,7 @@ jobs:
             build/dist/*.tar.gz
             build/dist/*.deb
             build/dist/*.pkg.tar.zst
+            build/dist/*.rpm
           if-no-files-found: error
           retention-days: 1
 
