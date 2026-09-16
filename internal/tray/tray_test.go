@@ -1,6 +1,7 @@
 package tray
 
 import (
+	"github.com/TIANLI0/THRM/internal/uilocale"
 	"strings"
 	"testing"
 	"time"
@@ -197,7 +198,7 @@ func TestStatusEqual(t *testing.T) {
 }
 
 func tooltipText(status Status) string {
-	return buildTrayTooltip("THRM - 智能变频中", formatTooltipReadings(status))
+	return buildTrayTooltip("THRM - 智能变频中", formatTooltipReadings(status, uilocale.Snapshot(uilocale.Default)))
 }
 
 func TestTooltipHidesUnavailableReadings(t *testing.T) {

@@ -21,6 +21,7 @@ import (
 	"github.com/TIANLI0/THRM/internal/temperature"
 	"github.com/TIANLI0/THRM/internal/tray"
 	"github.com/TIANLI0/THRM/internal/types"
+	"github.com/TIANLI0/THRM/internal/uilocale"
 )
 
 // CoreApp 核心应用结构
@@ -33,6 +34,8 @@ type CoreApp struct {
 	tempHistory      *temperature.HistoryRecorder
 	laptopFanReader  *laptopfan.Reader
 	configManager    *config.Manager
+	uiLocale         *uilocale.Store
+	uiLocaleMutex    sync.Mutex
 	trayManager      *tray.Manager
 	hotkeyManager    *hotkeysvc.Manager
 	notifier         *notifier.Manager
@@ -66,7 +69,7 @@ type CoreApp struct {
 	legionFnQRegistered     atomic.Bool
 	reconnectInProgress     atomic.Bool
 	// startupConfigApplied 标记"本进程已经把 App 配置整体下发过一次"。
-	startupConfigApplied atomic.Bool
+	startupConfigApplied    atomic.Bool
 	autoReconnectSuppressed atomic.Bool
 	resumeRecoveryRunning   atomic.Bool
 	systemSuspended         atomic.Bool
@@ -140,12 +143,14 @@ func NewCoreApp(debugMode, isAutoStart bool, iconData []byte) *CoreApp {
 	deviceMgr := device.NewManager(customLogger)
 	tempReader := temperature.NewReader(bridgeMgr, customLogger)
 	configMgr := config.NewManager(installDir, customLogger)
+	uiLocale := uilocale.NewStore(configMgr.GetDefaultConfigDir())
 	historyPath := temperatureHistoryPath(installDir)
 	migrateLegacyTemperatureHistory(historyPath, installDir, customLogger)
 	historyRetentionHours := types.NormalizeTemperatureHistoryRetentionHours(configMgr.Get().TemperatureHistoryRetentionHours)
 	historyPointsPerHour := int(time.Hour / temperature.DefaultHistorySampleInterval)
 	tempHistory := temperature.NewHistoryRecorder(historyPath, historyPointsPerHour*historyRetentionHours, temperature.DefaultHistorySampleInterval, customLogger)
 	trayMgr := tray.NewManager(customLogger, iconData)
+	trayMgr.SetLocale(uiLocale.Snapshot())
 	autostartMgr := autostart.NewManager(customLogger)
 	pluginMgr := plugins.NewManager(customLogger)
 
@@ -158,6 +163,7 @@ func NewCoreApp(debugMode, isAutoStart bool, iconData []byte) *CoreApp {
 		laptopFanReader:    laptopfan.NewReader(customLogger),
 		currentTemp:        types.TemperatureData{BridgeOk: true},
 		configManager:      configMgr,
+		uiLocale:           uiLocale,
 		trayManager:        trayMgr,
 		autostartManager:   autostartMgr,
 		pluginManager:      pluginMgr,

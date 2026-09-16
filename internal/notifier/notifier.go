@@ -7,6 +7,7 @@ import (
 
 	"github.com/TIANLI0/THRM/internal/appmeta"
 	"github.com/TIANLI0/THRM/internal/types"
+	"github.com/TIANLI0/THRM/internal/uilocale"
 	"github.com/gen2brain/beeep"
 )
 
@@ -14,6 +15,7 @@ import (
 type Manager struct {
 	logger   types.Logger
 	iconPath string
+	send     func(string, string, any) error
 }
 
 func NewManager(logger types.Logger, iconData []byte) *Manager {
@@ -21,22 +23,22 @@ func NewManager(logger types.Logger, iconData []byte) *Manager {
 	return &Manager{
 		logger:   logger,
 		iconPath: ensureNotificationIcon(iconData, logger),
+		send:     beeep.Notify,
 	}
 }
 
-func (m *Manager) Notify(title, message string) {
+func (m *Manager) Notify(locale uilocale.Snapshot, title, message string) {
 	title = strings.TrimSpace(title)
-	message = strings.TrimSpace(message)
-	if message == "" {
+	if strings.TrimSpace(message) == "" {
 		return
 	}
 
-	toastTitle := "功能变动"
+	toastTitle := locale.Text("nativeUI.notification.fallback", nil)
 	if title != "" {
 		toastTitle = title
 	}
 
-	if err := beeep.Notify(toastTitle, message, m.iconPath); err != nil {
+	if err := m.send(toastTitle, message, m.iconPath); err != nil {
 		if m.logger != nil {
 			m.logger.Debug("系统通知发送失败: %v", err)
 		}

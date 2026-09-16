@@ -1213,5 +1213,45 @@
     "bridgeNoTemperatures": "유효한 CPU/GPU 온도를 읽지 못했습니다",
     "hardwareDetail": "하드웨어 모니터링 정보: {{detail}}",
     "pawnIoHint": "THRM에서 “PawnIO 다시 설치”를 클릭한 후 THRM을 다시 시작하세요. 설치 파일은 앱에 포함되어 있습니다. 계속 실패하면 하드웨어 센서를 독점할 수 있는 다른 모니터링 프로그램을 종료하고 다시 시도하세요."
+  },
+  "nativeUI": {
+    "tray": {
+      "show": "메인 창 표시",
+      "showTooltip": "컨트롤러 메인 창 표시",
+      "device": "장치 상태",
+      "deviceTooltip": "장치 연결 상태 확인",
+      "cpuTemperature": "CPU 온도",
+      "cpuTemperatureTooltip": "현재 CPU 온도 표시",
+      "gpuTemperature": "GPU 온도",
+      "gpuTemperatureTooltip": "현재 GPU 온도 표시",
+      "cpuPower": "CPU 전력",
+      "cpuPowerTooltip": "현재 CPU 패키지 전력 표시",
+      "gpuPower": "GPU 전력",
+      "gpuPowerTooltip": "현재 GPU 전력 표시",
+      "fanSpeed": "팬 속도",
+      "fanSpeedTooltip": "현재 팬 속도 표시",
+      "curveSelect": "팬 커브 선택",
+      "curveSelectTooltip": "선택한 팬 커브로 전환",
+      "autoControl": "스마트 제어",
+      "autoControlTooltip": "스마트 제어 켜기/끄기",
+      "quit": "종료",
+      "quitTooltip": "앱 완전히 종료",
+      "connected": "연결됨",
+      "disconnected": "연결 안 됨",
+      "noData": "데이터 없음",
+      "running": "{{app}} - 실행 중",
+      "smartControlActive": "{{app}} - 스마트 제어 중",
+      "manualMode": "{{app}} - 수동 모드",
+      "deviceDisconnected": "{{app}} - 장치 연결 안 됨",
+      "fanReading": "팬 {{rpm}} RPM",
+      "emptyCurves": "사용 가능한 팬 커브 없음",
+      "switchCurveTooltip": "팬 커브 전환"
+    },
+    "notification": {
+      "hotkey": "{{app}} 단축키",
+      "hotkeyFailed": "{{app}} 단축키 실행 실패",
+      "fallback": "기능 설정이 변경되었습니다",
+      "noCurves": "사용 가능한 팬 커브 프로필이 없습니다"
+    }
   }
 }

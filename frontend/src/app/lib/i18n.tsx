@@ -102,6 +102,7 @@ if (!i18n.isInitialized) {
 
 type LocaleContextValue = {
   locale: AppLocale;
+  localeReady: boolean;
   setLocale: (locale: AppLocale) => void;
   supportedLocales: readonly AppLocale[];
 };
@@ -110,25 +111,29 @@ const LocaleContext = createContext<LocaleContextValue | null>(null);
 
 export function AppI18nProvider({ children }: { children: React.ReactNode }) {
   const [locale, setLocaleState] = useState<AppLocale>(DEFAULT_LOCALE);
+  const [localeReady, setLocaleReady] = useState(false);
 
   useEffect(() => {
     setLocaleState(readPreferredLocale());
+    setLocaleReady(true);
   }, []);
 
   useEffect(() => {
+    if (!localeReady) return;
     syncDocumentLocale(locale);
     syncDocumentMetadata(locale);
     window.localStorage.setItem(LOCALE_STORAGE_KEY, locale);
     void i18n.changeLanguage(locale);
-  }, [locale]);
+  }, [locale, localeReady]);
 
   const value = useMemo<LocaleContextValue>(
     () => ({
       locale,
+      localeReady,
       setLocale: (nextLocale) => setLocaleState(normalizeLocale(nextLocale)),
       supportedLocales: SUPPORTED_LOCALES,
     }),
-    [locale],
+    [locale, localeReady],
   );
 
   return (

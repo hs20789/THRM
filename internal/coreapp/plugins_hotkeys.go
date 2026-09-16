@@ -324,8 +324,7 @@ func (a *CoreApp) handleHotkeyAction(action hotkeysvc.Action, shortcut string) {
 		message := result.Text
 
 		if a.ipcServer != nil {
-			// messageKey/messageParams 是新增字段，message 保持原样：旧版前端与系统通知
-			// 继续用中文原文，认识 messageKey 的前端才走 i18n 分支。
+			// Keep the raw message and protocol params for existing GUI consumers.
 			a.ipcServer.BroadcastEvent(ipc.EventHotkeyTriggered, map[string]any{
 				"action":        string(action),
 				"shortcut":      shortcut,
@@ -336,18 +335,20 @@ func (a *CoreApp) handleHotkeyAction(action hotkeysvc.Action, shortcut string) {
 			})
 		}
 
-		title := appmeta.AppName + " 快捷键"
+		locale := a.uiLocale.Snapshot()
+		titleKey := "nativeUI.notification.hotkey"
 		if !success {
-			title = appmeta.AppName + " 快捷键失败"
+			titleKey = "nativeUI.notification.hotkeyFailed"
 		}
 		if a.notifier != nil {
-			a.notifier.Notify(title, message)
+			title := locale.Text(titleKey, map[string]any{"app": appmeta.AppName})
+			a.notifier.Notify(locale, title, locale.HotkeyMessage(result.Key, result.Params, message))
 		}
 	})
 }
 
 // hotkeyResult 是一次快捷键动作的结果。Key/Params 给前端做 i18n（核心服务不知道 GUI
-// 当前语言），Text 是等价的中文原文，留给系统通知和不认识 messageKey 的旧版前端。
+// 当前语言），Text 保留原文用于诊断和不认识 messageKey 的旧版前端。
 //
 // Params 里的挡位/档级放的是 GearCommands 的原始键（"静音"、"中"），不是本地化文案：
 // 那是设备协议值，前端拿到后用 getManualGearLabel/getManualLevelLabel 翻译再插值。

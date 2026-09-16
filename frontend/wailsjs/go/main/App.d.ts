@@ -140,6 +140,8 @@ export function SetTemperatureHistoryEnabled(arg1:boolean):Promise<void>;
 
 export function SetTemperatureHistoryRetentionHours(arg1:number):Promise<void>;
 
+export function SetUILocale(arg1:string):Promise<void>;
+
 export function SetWindowsAutoStart(arg1:boolean):Promise<void>;
 
 export function ShowWindow():Promise<void>;

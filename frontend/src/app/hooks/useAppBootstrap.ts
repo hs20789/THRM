@@ -1,8 +1,10 @@
 import { useEffect } from 'react';
 import { apiService } from '../services/api';
 import { useAppStore } from '../store/app-store';
+import { useNativeLocaleSync } from './useNativeLocaleSync';
 
 export function useAppBootstrap() {
+  useNativeLocaleSync();
   const initializeApp = useAppStore((state) => state.initializeApp);
   const startEventListeners = useAppStore((state) => state.startEventListeners);
 

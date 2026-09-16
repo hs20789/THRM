@@ -1212,5 +1212,45 @@
     "bridgeNoTemperatures": "有効な CPU/GPU 温度を読み取れませんでした",
     "hardwareDetail": "ハードウェア監視情報: {{detail}}",
     "pawnIoHint": "THRM の「PawnIO を再インストール」をクリックし、THRM を再起動してください。インストーラーは同梱されています。改善しない場合は、センサーを占有する可能性がある他の監視ソフトを終了して再試行してください。"
+  },
+  "nativeUI": {
+    "tray": {
+      "show": "メインウィンドウを表示",
+      "showTooltip": "コントローラーのメインウィンドウを表示",
+      "device": "デバイスの状態",
+      "deviceTooltip": "デバイスの接続状態を確認",
+      "cpuTemperature": "CPU 温度",
+      "cpuTemperatureTooltip": "現在の CPU 温度を表示",
+      "gpuTemperature": "GPU 温度",
+      "gpuTemperatureTooltip": "現在の GPU 温度を表示",
+      "cpuPower": "CPU 消費電力",
+      "cpuPowerTooltip": "現在の CPU パッケージ消費電力を表示",
+      "gpuPower": "GPU 消費電力",
+      "gpuPowerTooltip": "現在の GPU 消費電力を表示",
+      "fanSpeed": "ファン速度",
+      "fanSpeedTooltip": "現在のファン速度を表示",
+      "curveSelect": "ファンカーブを選択",
+      "curveSelectTooltip": "選択したファンカーブに切り替え",
+      "autoControl": "スマート制御",
+      "autoControlTooltip": "スマート制御を有効化・無効化",
+      "quit": "終了",
+      "quitTooltip": "アプリを完全に終了",
+      "connected": "接続済み",
+      "disconnected": "未接続",
+      "noData": "データなし",
+      "running": "{{app}} - 実行中",
+      "smartControlActive": "{{app}} - スマート制御中",
+      "manualMode": "{{app}} - 手動モード",
+      "deviceDisconnected": "{{app}} - デバイス未接続",
+      "fanReading": "ファン {{rpm}} RPM",
+      "emptyCurves": "利用可能なファンカーブがありません",
+      "switchCurveTooltip": "ファンカーブを切り替え"
+    },
+    "notification": {
+      "hotkey": "{{app}} ショートカット",
+      "hotkeyFailed": "{{app}} ショートカットの実行に失敗",
+      "fallback": "機能設定が変更されました",
+      "noCurves": "利用可能なファンカーブプロファイルがありません"
+    }
   }
 }

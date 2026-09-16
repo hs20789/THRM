@@ -15,6 +15,16 @@ func (a *CoreApp) handleIPCRequest(req ipc.Request) ipc.Response {
 	a.logDebug("处理 IPC 请求[%s] type=%s", req.RequestID, req.Type)
 
 	switch req.Type {
+	case ipc.ReqSetUILocale:
+		var params ipc.SetStringParams
+		if err := json.Unmarshal(req.Data, &params); err != nil {
+			return a.errorResponse("Invalid UI locale: " + err.Error())
+		}
+		if err := a.setUILocale(params.Value); err != nil {
+			return a.errorResponse(err.Error())
+		}
+		return a.successResponse(true)
+
 	// 设备相关
 	case ipc.ReqConnect:
 		success := a.ConnectDevice()

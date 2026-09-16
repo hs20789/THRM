@@ -22,7 +22,7 @@ func ipcRequestPolicy(reqType ipc.RequestType) (time.Duration, bool) {
 		return 6 * time.Second, true
 	case ipc.ReqConnect, ipc.ReqRestartPawnIO, ipc.ReqReinstallPawnIO:
 		return 30 * time.Second, false
-	case ipc.ReqUpdateGuiResponseTime:
+	case ipc.ReqUpdateGuiResponseTime, ipc.ReqSetUILocale:
 		return 12 * time.Second, true
 	default:
 		return 12 * time.Second, false

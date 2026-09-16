@@ -61,6 +61,7 @@ const (
 	// 配置相关
 	ReqGetConfig                RequestType = "GetConfig"
 	ReqUpdateConfig             RequestType = "UpdateConfig"
+	ReqSetUILocale              RequestType = "SetUILocale"
 	ReqSetFanCurve              RequestType = "SetFanCurve"
 	ReqGetFanCurve              RequestType = "GetFanCurve"
 	ReqGetFanCurveProfiles      RequestType = "GetFanCurveProfiles"

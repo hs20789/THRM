@@ -2,7 +2,6 @@ package coreapp
 
 import (
 	"os"
-	"strings"
 	"time"
 
 	"github.com/TIANLI0/THRM/internal/autostart"
@@ -300,11 +299,7 @@ func (a *CoreApp) initSystemTray() {
 				if p.ID == "" {
 					continue
 				}
-				name := p.Name
-				if strings.TrimSpace(name) == "" {
-					name = "默认"
-				}
-				options = append(options, tray.CurveOption{ID: p.ID, Name: name})
+				options = append(options, tray.CurveOption{ID: p.ID, Name: p.Name})
 			}
 			return options, cfg.ActiveFanCurveProfileID
 		},
@@ -322,11 +317,7 @@ func (a *CoreApp) initSystemTray() {
 				if p.ID == "" {
 					continue
 				}
-				name := p.Name
-				if strings.TrimSpace(name) == "" {
-					name = "默认"
-				}
-				curveOptions = append(curveOptions, tray.CurveOption{ID: p.ID, Name: name})
+				curveOptions = append(curveOptions, tray.CurveOption{ID: p.ID, Name: p.Name})
 			}
 
 			return tray.Status{

@@ -7,6 +7,7 @@ import {
   GetDeviceStatus,
   GetConfig,
   UpdateConfig,
+  SetUILocale,
   PreviewRTSSPosition,
   GetRTSSLayoutStatus,
   CreateRTSSAnchor,
@@ -58,6 +59,10 @@ import type {
 } from '../types/app';
 
 class ApiService {
+  async setUILocale(locale: string): Promise<void> {
+    await SetUILocale(locale);
+  }
+
   // 设备连接
   async connectDevice(): Promise<boolean> {
     return await ConnectDevice();

@@ -12,6 +12,7 @@ import (
 	"fyne.io/systray"
 	"github.com/TIANLI0/THRM/internal/appmeta"
 	"github.com/TIANLI0/THRM/internal/types"
+	"github.com/TIANLI0/THRM/internal/uilocale"
 )
 
 const (
@@ -49,6 +50,8 @@ type Manager struct {
 	mutex           sync.Mutex
 	done            chan struct{} // 关闭此通道以通知所有 goroutine 退出（进程级，仅退出时关闭）
 	uiQueue         chan func()
+	locale          atomic.Value // uilocale.Snapshot
+	localeChanged   chan struct{}
 	iconData        []byte
 	menuItems       *MenuItems
 	onShowWindow    func()
@@ -161,7 +164,7 @@ func buildTrayTooltip(header string, lines []string) string {
 // 分行写光是标签就要吃掉十几个。功耗取整——悬浮提示是用来扫一眼的，小数位不值那两格。
 //
 // 可见性与右键菜单同一套规则：用户关掉 GPU 监测就不提 GPU，功耗读不到就不提功耗。
-func formatTooltipReadings(status Status) []string {
+func formatTooltipReadings(status Status, locale uilocale.Snapshot) []string {
 	cpu := fmt.Sprintf("CPU %d°C", status.CPUTemp)
 	if status.CPUPower > 0 {
 		cpu += fmt.Sprintf(" %.0fW", status.CPUPower)
@@ -178,7 +181,7 @@ func formatTooltipReadings(status Status) []string {
 
 	lines := []string{readings}
 	if status.CurrentRPM > 0 {
-		lines = append(lines, fmt.Sprintf("风扇 %d RPM", status.CurrentRPM))
+		lines = append(lines, locale.Text("nativeUI.tray.fanReading", map[string]any{"rpm": status.CurrentRPM}))
 	}
 	return lines
 }
@@ -210,6 +213,7 @@ func NewManager(logger types.Logger, iconData []byte) *Manager {
 		logger:         logger,
 		done:           make(chan struct{}),
 		uiQueue:        make(chan func(), 64),
+		localeChanged:  make(chan struct{}, 1),
 		iconData:       iconData,
 		curveMenuItems: make(map[string]*systray.MenuItem),
 		enableCh:       make(chan struct{}, 1),
@@ -627,7 +631,7 @@ func (m *Manager) setupIcon() (err error) {
 
 	systray.SetIcon(m.iconData)
 	systray.SetTitle(appmeta.AppName)
-	systray.SetTooltip(appmeta.AppName + " - 运行中")
+	systray.SetTooltip(m.localeSnapshot().Text("nativeUI.tray.running", map[string]any{"app": appmeta.AppName}))
 	return nil
 }
 
@@ -640,34 +644,35 @@ func (m *Manager) createMenu() (items *MenuItems, err error) {
 	}()
 
 	items = &MenuItems{}
+	locale := m.localeSnapshot()
 
-	items.Show = systray.AddMenuItem("显示主窗口", "显示控制器主窗口")
+	items.Show = systray.AddMenuItem(locale.Text("nativeUI.tray.show", nil), locale.Text("nativeUI.tray.showTooltip", nil))
 	systray.AddSeparator()
 
-	items.DeviceStatus = systray.AddMenuItem("设备状态", "查看设备连接状态")
+	items.DeviceStatus = systray.AddMenuItem(locale.Text("nativeUI.tray.device", nil), locale.Text("nativeUI.tray.deviceTooltip", nil))
 	items.DeviceStatus.Disable()
 
-	items.CPUTemperature = systray.AddMenuItem("CPU温度", "显示当前CPU温度")
+	items.CPUTemperature = systray.AddMenuItem(locale.Text("nativeUI.tray.cpuTemperature", nil), locale.Text("nativeUI.tray.cpuTemperatureTooltip", nil))
 	items.CPUTemperature.Disable()
 
-	items.GPUTemperature = systray.AddMenuItem("GPU温度", "显示当前GPU温度")
+	items.GPUTemperature = systray.AddMenuItem(locale.Text("nativeUI.tray.gpuTemperature", nil), locale.Text("nativeUI.tray.gpuTemperatureTooltip", nil))
 	items.GPUTemperature.Disable()
 
-	items.CPUPower = systray.AddMenuItem("CPU功耗", "显示当前CPU封装功耗")
+	items.CPUPower = systray.AddMenuItem(locale.Text("nativeUI.tray.cpuPower", nil), locale.Text("nativeUI.tray.cpuPowerTooltip", nil))
 	items.CPUPower.Disable()
 	items.CPUPower.Hide()
 
-	items.GPUPower = systray.AddMenuItem("GPU功耗", "显示当前GPU功耗")
+	items.GPUPower = systray.AddMenuItem(locale.Text("nativeUI.tray.gpuPower", nil), locale.Text("nativeUI.tray.gpuPowerTooltip", nil))
 	items.GPUPower.Disable()
 	items.GPUPower.Hide()
 
-	items.FanSpeed = systray.AddMenuItem("风扇转速", "显示当前风扇转速")
+	items.FanSpeed = systray.AddMenuItem(locale.Text("nativeUI.tray.fanSpeed", nil), locale.Text("nativeUI.tray.fanSpeedTooltip", nil))
 	items.FanSpeed.Disable()
-	items.CurveSelect = systray.AddMenuItem("选择温控曲线", "直接切换到指定温控曲线")
+	items.CurveSelect = systray.AddMenuItem(locale.Text("nativeUI.tray.curveSelect", nil), locale.Text("nativeUI.tray.curveSelectTooltip", nil))
 
 	if m.getCurveOptions != nil {
 		profiles, activeID := m.getCurveOptions()
-		m.ensureCurveMenuItems(items.CurveSelect, profiles)
+		m.ensureCurveMenuItems(items.CurveSelect, profiles, locale)
 		m.updateCurveMenuSelection(activeID)
 	}
 
@@ -676,10 +681,10 @@ func (m *Manager) createMenu() (items *MenuItems, err error) {
 	if m.getStatus != nil {
 		autoControlEnabled = m.getStatus().AutoControlState
 	}
-	items.AutoControl = systray.AddMenuItemCheckbox("智能变频", "启用/禁用智能变频", autoControlEnabled)
+	items.AutoControl = systray.AddMenuItemCheckbox(locale.Text("nativeUI.tray.autoControl", nil), locale.Text("nativeUI.tray.autoControlTooltip", nil), autoControlEnabled)
 
 	systray.AddSeparator()
-	items.Quit = systray.AddMenuItem("退出", "完全退出应用")
+	items.Quit = systray.AddMenuItem(locale.Text("nativeUI.tray.quit", nil), locale.Text("nativeUI.tray.quitTooltip", nil))
 
 	return items, nil
 }
@@ -775,107 +780,97 @@ func (m *Manager) updateMenuStatus(instanceDone <-chan struct{}) {
 			m.logError("更新托盘菜单状态时发生panic: %v", r)
 		}
 	}()
-
 	ticker := time.NewTicker(trayStatusRefreshInterval)
 	defer ticker.Stop()
 	var previousStatus Status
+	var previousLocale uilocale.Snapshot
 	hasPreviousStatus := false
-
 	for {
 		select {
 		case <-ticker.C:
-			// 如果托盘不可用，跳过本次更新但不退出，等待恢复
-			if atomic.LoadInt32(&m.readyState) == 0 || atomic.LoadInt32(&m.initialized) == 0 {
-				continue
-			}
-
-			if m.getStatus == nil {
-				continue
-			}
-
-			status := m.getStatus()
-			if hasPreviousStatus && statusEqual(status, previousStatus) {
-				continue
-			}
-			if m.enqueueUI("update-menu-status", func() {
-				if m.menuItems == nil {
-					return
-				}
-
-				if status.Connected {
-					m.menuItems.DeviceStatus.SetTitle("设备状态: 已连接")
-				} else {
-					m.menuItems.DeviceStatus.SetTitle("设备状态: 未连接")
-				}
-
-				if status.CPUTemp > 0 {
-					m.menuItems.CPUTemperature.SetTitle(fmt.Sprintf("CPU温度: %d°C", status.CPUTemp))
-				} else {
-					m.menuItems.CPUTemperature.SetTitle("CPU温度: 无数据")
-				}
-
-				if status.GPUMonitoringDisabled {
-					m.menuItems.GPUTemperature.Hide()
-				} else {
-					m.menuItems.GPUTemperature.Show()
-					if status.GPUTemp > 0 {
-						m.menuItems.GPUTemperature.SetTitle(fmt.Sprintf("GPU温度: %d°C", status.GPUTemp))
-					} else {
-						m.menuItems.GPUTemperature.SetTitle("GPU温度: 无数据")
-					}
-				}
-
-				// 功耗要 PawnIO 加上 CPU/GPU 本身支持才读得到，不少机型没有。
-				// 读不到就整行隐藏，而不是摆一个会误导人的 0 W。
-				if status.CPUPower > 0 {
-					m.menuItems.CPUPower.SetTitle(fmt.Sprintf("CPU功耗: %.1f W", status.CPUPower))
-					m.menuItems.CPUPower.Show()
-				} else {
-					m.menuItems.CPUPower.Hide()
-				}
-				if status.GPUPower > 0 && !status.GPUMonitoringDisabled {
-					m.menuItems.GPUPower.SetTitle(fmt.Sprintf("GPU功耗: %.1f W", status.GPUPower))
-					m.menuItems.GPUPower.Show()
-				} else {
-					m.menuItems.GPUPower.Hide()
-				}
-
-				if status.CurrentRPM > 0 {
-					m.menuItems.FanSpeed.SetTitle(fmt.Sprintf("风扇转速: %d RPM", status.CurrentRPM))
-				} else {
-					m.menuItems.FanSpeed.SetTitle("风扇转速: 无数据")
-				}
-
-				if m.menuItems.CurveSelect != nil {
-					m.ensureCurveMenuItems(m.menuItems.CurveSelect, status.CurveProfiles)
-					m.updateCurveMenuSelection(status.ActiveCurveProfileID)
-				}
-
-				if status.AutoControlState {
-					m.menuItems.AutoControl.Check()
-				} else {
-					m.menuItems.AutoControl.Uncheck()
-				}
-
-				if status.Connected {
-					if status.AutoControlState {
-						systray.SetTooltip(buildTrayTooltip(appmeta.AppName+" - 智能变频中", formatTooltipReadings(status)))
-					} else {
-						systray.SetTooltip(buildTrayTooltip(appmeta.AppName+" - 手动模式", formatTooltipReadings(status)))
-					}
-				} else {
-					systray.SetTooltip(appmeta.AppName + " - 设备未连接")
-				}
-			}) {
-				previousStatus = status
-				hasPreviousStatus = true
-			}
+		case <-m.localeChanged:
 		case <-instanceDone:
 			return
 		case <-m.done:
 			return
 		}
+		if !m.IsReady() || !m.IsInitialized() || m.getStatus == nil {
+			continue
+		}
+		status := m.getStatus()
+		locale := m.localeSnapshot()
+		if hasPreviousStatus && previousLocale == locale && statusEqual(status, previousStatus) {
+			continue
+		}
+		if m.enqueueUI("update-menu-status", func() { m.applyMenuStatus(status) }) {
+			previousStatus, previousLocale, hasPreviousStatus = status, locale, true
+		}
 	}
+}
+
+func (m *Manager) applyMenuStatus(status Status) {
+	locale := m.localeSnapshot()
+	if m.menuItems == nil {
+		return
+	}
+
+	m.applyStaticLabels(locale)
+	if status.Connected {
+		m.menuItems.DeviceStatus.SetTitle(locale.Text("nativeUI.tray.device", nil) + ": " + locale.Text("nativeUI.tray.connected", nil))
+	} else {
+		m.menuItems.DeviceStatus.SetTitle(locale.Text("nativeUI.tray.device", nil) + ": " + locale.Text("nativeUI.tray.disconnected", nil))
+	}
+
+	if status.CPUTemp > 0 {
+		m.menuItems.CPUTemperature.SetTitle(fmt.Sprintf("%s: %d°C", locale.Text("nativeUI.tray.cpuTemperature", nil), status.CPUTemp))
+	} else {
+		m.menuItems.CPUTemperature.SetTitle(locale.Text("nativeUI.tray.cpuTemperature", nil) + ": " + locale.Text("nativeUI.tray.noData", nil))
+	}
+
+	if status.GPUMonitoringDisabled {
+		m.menuItems.GPUTemperature.Hide()
+	} else {
+		m.menuItems.GPUTemperature.Show()
+		if status.GPUTemp > 0 {
+			m.menuItems.GPUTemperature.SetTitle(fmt.Sprintf("%s: %d°C", locale.Text("nativeUI.tray.gpuTemperature", nil), status.GPUTemp))
+		} else {
+			m.menuItems.GPUTemperature.SetTitle(locale.Text("nativeUI.tray.gpuTemperature", nil) + ": " + locale.Text("nativeUI.tray.noData", nil))
+		}
+	}
+
+	// 功耗要 PawnIO 加上 CPU/GPU 本身支持才读得到，不少机型没有。
+	// 读不到就整行隐藏，而不是摆一个会误导人的 0 W。
+	if status.CPUPower > 0 {
+		m.menuItems.CPUPower.SetTitle(fmt.Sprintf("%s: %.1f W", locale.Text("nativeUI.tray.cpuPower", nil), status.CPUPower))
+		m.menuItems.CPUPower.Show()
+	} else {
+		m.menuItems.CPUPower.Hide()
+	}
+	if status.GPUPower > 0 && !status.GPUMonitoringDisabled {
+		m.menuItems.GPUPower.SetTitle(fmt.Sprintf("%s: %.1f W", locale.Text("nativeUI.tray.gpuPower", nil), status.GPUPower))
+		m.menuItems.GPUPower.Show()
+	} else {
+		m.menuItems.GPUPower.Hide()
+	}
+
+	if status.CurrentRPM > 0 {
+		m.menuItems.FanSpeed.SetTitle(fmt.Sprintf("%s: %d RPM", locale.Text("nativeUI.tray.fanSpeed", nil), status.CurrentRPM))
+	} else {
+		m.menuItems.FanSpeed.SetTitle(locale.Text("nativeUI.tray.fanSpeed", nil) + ": " + locale.Text("nativeUI.tray.noData", nil))
+	}
+
+	if m.menuItems.CurveSelect != nil {
+		m.ensureCurveMenuItems(m.menuItems.CurveSelect, status.CurveProfiles, locale)
+		m.updateCurveMenuSelection(status.ActiveCurveProfileID)
+	}
+
+	if status.AutoControlState {
+		m.menuItems.AutoControl.Check()
+	} else {
+		m.menuItems.AutoControl.Uncheck()
+	}
+
+	systray.SetTooltip(localizedTrayTooltip(status, locale))
 }
 
 // onTrayExit 托盘退出时的回调
@@ -933,7 +928,11 @@ func (m *Manager) refreshTrayIcon() {
 		}
 
 		systray.SetIcon(m.iconData)
-		systray.SetTooltip(appmeta.AppName + " - 运行中")
+		if m.getStatus != nil {
+			systray.SetTooltip(localizedTrayTooltip(m.getStatus(), m.localeSnapshot()))
+		} else {
+			systray.SetTooltip(m.localeSnapshot().Text("nativeUI.tray.running", map[string]any{"app": appmeta.AppName}))
+		}
 
 		m.consecutiveFails.Store(0)
 		m.lastIconRefresh.Store(time.Now().Unix())
@@ -1133,14 +1132,17 @@ func (m *Manager) logDebug(format string, v ...any) {
 	}
 }
 
-func (m *Manager) ensureCurveMenuItems(parent *systray.MenuItem, options []CurveOption) {
+func (m *Manager) ensureCurveMenuItems(parent *systray.MenuItem, options []CurveOption, locale uilocale.Snapshot) {
 	if parent == nil {
 		return
 	}
 
 	if len(options) == 0 {
+		if empty := m.curveMenuItems["__empty__"]; empty != nil {
+			empty.SetTitle(locale.Text("nativeUI.tray.emptyCurves", nil))
+		}
 		if len(m.curveMenuItems) == 0 {
-			emptyItem := parent.AddSubMenuItem("暂无可用曲线", "")
+			emptyItem := parent.AddSubMenuItem(locale.Text("nativeUI.tray.emptyCurves", nil), "")
 			emptyItem.Disable()
 			m.curveMenuItems["__empty__"] = emptyItem
 		}
@@ -1174,11 +1176,12 @@ func (m *Manager) ensureCurveMenuItems(parent *systray.MenuItem, options []Curve
 		}
 		if existing, ok := m.curveMenuItems[option.ID]; ok && existing != nil {
 			existing.Show()
-			existing.SetTitle(option.Name)
+			existing.SetTitle(curveDisplayName(option, locale))
+			existing.SetTooltip(locale.Text("nativeUI.tray.switchCurveTooltip", nil))
 			continue
 		}
 
-		item := parent.AddSubMenuItemCheckbox(option.Name, "切换温控曲线", false)
+		item := parent.AddSubMenuItemCheckbox(curveDisplayName(option, locale), locale.Text("nativeUI.tray.switchCurveTooltip", nil), false)
 		m.curveMenuItems[option.ID] = item
 
 		profileID := option.ID

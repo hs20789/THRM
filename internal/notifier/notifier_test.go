@@ -4,29 +4,30 @@ import (
 	"testing"
 
 	"github.com/TIANLI0/THRM/internal/types"
+	"github.com/TIANLI0/THRM/internal/uilocale"
 )
 
 type testLogger struct{}
 
-func (l testLogger) Info(format string, v ...any)    {}
-func (l testLogger) Error(format string, v ...any)   {}
-func (l testLogger) Warn(format string, v ...any)    {}
-func (l testLogger) Debug(format string, v ...any)   {}
-func (l testLogger) Close()                          {}
-func (l testLogger) CleanOldLogs()                   {}
-func (l testLogger) SetDebugMode(enabled bool)       {}
-func (l testLogger) GetLogDir() string               { return "" }
+func (l testLogger) Info(format string, v ...any)  {}
+func (l testLogger) Error(format string, v ...any) {}
+func (l testLogger) Warn(format string, v ...any)  {}
+func (l testLogger) Debug(format string, v ...any) {}
+func (l testLogger) Close()                        {}
+func (l testLogger) CleanOldLogs()                 {}
+func (l testLogger) SetDebugMode(enabled bool)     {}
+func (l testLogger) GetLogDir() string             { return "" }
 
 type testLogger2 struct{}
 
-func (l testLogger2) Info(format string, v ...any)    {}
-func (l testLogger2) Error(format string, v ...any)   {}
-func (l testLogger2) Warn(format string, v ...any)    {}
-func (l testLogger2) Debug(format string, v ...any)   {}
-func (l testLogger2) Close()                          {}
-func (l testLogger2) CleanOldLogs()                   {}
-func (l testLogger2) SetDebugMode(enabled bool)       {}
-func (l testLogger2) GetLogDir() string               { return "" }
+func (l testLogger2) Info(format string, v ...any)  {}
+func (l testLogger2) Error(format string, v ...any) {}
+func (l testLogger2) Warn(format string, v ...any)  {}
+func (l testLogger2) Debug(format string, v ...any) {}
+func (l testLogger2) Close()                        {}
+func (l testLogger2) CleanOldLogs()                 {}
+func (l testLogger2) SetDebugMode(enabled bool)     {}
+func (l testLogger2) GetLogDir() string             { return "" }
 
 func TestNewManager(t *testing.T) {
 	m := NewManager(testLogger{}, nil)
@@ -37,7 +38,7 @@ func TestNewManager(t *testing.T) {
 
 func TestNotify_NoCrash(t *testing.T) {
 	m := NewManager(testLogger2{}, nil)
-	m.Notify("Test Title", "Test Message")
+	m.Notify(uilocale.Snapshot(uilocale.Default), "Test Title", "Test Message")
 }
 
 func TestNewManager_WithIcon(t *testing.T) {

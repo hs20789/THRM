@@ -1213,5 +1213,45 @@
     "bridgeNoTemperatures": "未读取到有效的 CPU/GPU 温度",
     "hardwareDetail": "硬件监控信息: {{detail}}",
     "pawnIoHint": "请在 THRM 内点击“重装 PawnIO”（应用已自带安装包），完成后重启 THRM；若仍不可用，请关闭可能独占硬件传感器的其它监控软件后重试"
+  },
+  "nativeUI": {
+    "tray": {
+      "show": "显示主窗口",
+      "showTooltip": "显示控制器主窗口",
+      "device": "设备状态",
+      "deviceTooltip": "查看设备连接状态",
+      "cpuTemperature": "CPU温度",
+      "cpuTemperatureTooltip": "显示当前CPU温度",
+      "gpuTemperature": "GPU温度",
+      "gpuTemperatureTooltip": "显示当前GPU温度",
+      "cpuPower": "CPU功耗",
+      "cpuPowerTooltip": "显示当前CPU封装功耗",
+      "gpuPower": "GPU功耗",
+      "gpuPowerTooltip": "显示当前GPU功耗",
+      "fanSpeed": "风扇转速",
+      "fanSpeedTooltip": "显示当前风扇转速",
+      "curveSelect": "选择温控曲线",
+      "curveSelectTooltip": "直接切换到指定温控曲线",
+      "autoControl": "智能变频",
+      "autoControlTooltip": "启用/禁用智能变频",
+      "quit": "退出",
+      "quitTooltip": "完全退出应用",
+      "connected": "已连接",
+      "disconnected": "未连接",
+      "noData": "无数据",
+      "running": "{{app}} - 运行中",
+      "smartControlActive": "{{app}} - 智能变频中",
+      "manualMode": "{{app}} - 手动模式",
+      "deviceDisconnected": "{{app}} - 设备未连接",
+      "fanReading": "风扇 {{rpm}} RPM",
+      "emptyCurves": "暂无可用曲线",
+      "switchCurveTooltip": "切换温控曲线"
+    },
+    "notification": {
+      "hotkey": "{{app}} 快捷键",
+      "hotkeyFailed": "{{app}} 快捷键失败",
+      "fallback": "功能变动",
+      "noCurves": "暂无可用温控曲线方案"
+    }
   }
 }

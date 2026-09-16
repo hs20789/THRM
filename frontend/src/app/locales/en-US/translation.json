@@ -1213,5 +1213,45 @@
     "bridgeNoTemperatures": "Could not read valid CPU/GPU temperatures",
     "hardwareDetail": "Hardware monitoring details: {{detail}}",
     "pawnIoHint": "Click “Reinstall PawnIO” in THRM, then restart THRM. The installer is included. If it still fails, close other monitoring software that may exclusively access the sensors and retry."
+  },
+  "nativeUI": {
+    "tray": {
+      "show": "Show main window",
+      "showTooltip": "Show the controller main window",
+      "device": "Device status",
+      "deviceTooltip": "View device connection status",
+      "cpuTemperature": "CPU temperature",
+      "cpuTemperatureTooltip": "Show current CPU temperature",
+      "gpuTemperature": "GPU temperature",
+      "gpuTemperatureTooltip": "Show current GPU temperature",
+      "cpuPower": "CPU power",
+      "cpuPowerTooltip": "Show current CPU package power",
+      "gpuPower": "GPU power",
+      "gpuPowerTooltip": "Show current GPU power",
+      "fanSpeed": "Fan speed",
+      "fanSpeedTooltip": "Show current fan speed",
+      "curveSelect": "Select fan curve",
+      "curveSelectTooltip": "Switch to the selected fan curve",
+      "autoControl": "Smart control",
+      "autoControlTooltip": "Enable or disable smart control",
+      "quit": "Quit",
+      "quitTooltip": "Quit the application completely",
+      "connected": "Connected",
+      "disconnected": "Disconnected",
+      "noData": "No data",
+      "running": "{{app}} - Running",
+      "smartControlActive": "{{app}} - Smart control",
+      "manualMode": "{{app}} - Manual mode",
+      "deviceDisconnected": "{{app}} - Device disconnected",
+      "fanReading": "Fan {{rpm}} RPM",
+      "emptyCurves": "No available fan curves",
+      "switchCurveTooltip": "Switch fan curve"
+    },
+    "notification": {
+      "hotkey": "{{app}} hotkey",
+      "hotkeyFailed": "{{app}} hotkey failed",
+      "fallback": "Settings changed",
+      "noCurves": "No available fan curve profiles"
+    }
   }
 }
